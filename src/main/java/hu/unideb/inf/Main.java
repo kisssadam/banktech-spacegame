@@ -7,25 +7,15 @@ import java.net.URL;
 
 import eu.loxon.centralcontrol.CentralControl;
 import eu.loxon.centralcontrol.CentralControlServiceService;
-import eu.loxon.centralcontrol.CommonResp;
-import eu.loxon.centralcontrol.ObjectFactory;
-import eu.loxon.centralcontrol.StartGameResponse;
 
 public class Main {
 
 	public static void main(String[] args) throws MalformedURLException {
 		args = getTestArgsArray();
-
 		CentralControl centralControl = getCentralControl(args);
-		ObjectFactory objectFactory = new ObjectFactory();
 
-		StartGameResponse startGameResponse = centralControl.startGame(objectFactory.createStartGameRequest());
-
-		CommonResp commonResp = startGameResponse.getResult();
-		System.out.println(commonResp);
-
-		System.out.println(startGameResponse.getSize());
-		System.out.println(startGameResponse.getUnits());
+		GameController gameController = new GameController(centralControl);
+		gameController.playGame();
 	}
 
 	private static final String[] getTestArgsArray() {
@@ -45,7 +35,6 @@ public class Main {
 
 		URL wsdlURL = new URL(wsdlLocation);
 		return new CentralControlServiceService(wsdlURL).getCentralControlPort();
-
 	}
 
 	private static final void setDefaultAuthentication(String username, char[] password) {
