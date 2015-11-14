@@ -18,12 +18,11 @@ import eu.loxon.centralcontrol.WsDirection;
 
 public class GameController {
 
+	private static ObjectFactory objectFactory = new ObjectFactory();
 	private CentralControl centralControl;
-	private ObjectFactory objectFactory;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
-		this.objectFactory = new ObjectFactory();
 	}
 
 	public void playGame() {
