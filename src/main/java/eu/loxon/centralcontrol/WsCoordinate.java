@@ -9,7 +9,8 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for wsCoordinate complex type.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * The following schema fragment specifies the expected content contained within
+ * this class.
  * 
  * <pre>
  * &lt;complexType name="wsCoordinate">
@@ -32,6 +33,16 @@ public class WsCoordinate {
 
 	protected int x;
 	protected int y;
+
+	public WsCoordinate(int x, int y) {
+		super();
+		this.x = x;
+		this.y = y;
+	}
+
+	public WsCoordinate() {
+		super();
+	}
 
 	/**
 	 * Gets the value of the x property.
