@@ -29,11 +29,9 @@ public class GameController {
 	}
 
 	public void playGame() {
-		StartGameResponse startGameResponse = centralControl.startGame(objectFactory.createStartGameRequest());
-		GetSpaceShuttlePosResponse getSpaceShuttlePosResponse = centralControl
-				.getSpaceShuttlePos(objectFactory.createGetSpaceShuttlePosRequest());
-		GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse = centralControl
-				.getSpaceShuttleExitPos(objectFactory.createGetSpaceShuttleExitPosRequest());
+		StartGameResponse startGameResponse = startGame();
+		GetSpaceShuttlePosResponse getSpaceShuttlePosResponse = getSpaceShuttlePos();
+		GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse = getSpaceShuttleExitPos();
 
 		LandingZone landingZone = new LandingZone(startGameResponse, getSpaceShuttlePosResponse,
 				getSpaceShuttleExitPosResponse);
@@ -41,55 +39,113 @@ public class GameController {
 		System.out.println(landingZone);
 		System.out.println();
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
+		System.out.println();
 
 		waitForMyTurn();
 
-		StructureTunnelRequest structureTunnelRequest = new StructureTunnelRequest();
-		structureTunnelRequest.setUnit(0);
 		WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
 				landingZone.getSpaceShuttleExitPos());
-		structureTunnelRequest.setDirection(exitDirection);
-		StructureTunnelResponse structureTunnelResponse = centralControl.structureTunnel(structureTunnelRequest);
+		StructureTunnelResponse structureTunnelResponse = structureTunnel(0, exitDirection);
 		System.out.println(structureTunnelResponse);
 		System.out.println();
 
-		MoveBuilderUnitRequest moveBuilderUnitRequest = new MoveBuilderUnitRequest();
-		moveBuilderUnitRequest.setUnit(0);
-		moveBuilderUnitRequest.setDirection(exitDirection);
-		MoveBuilderUnitResponse moveBuilderUnitResponse = centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+		waitForMyTurn();
+
+		MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1, exitDirection);
 		System.out.println(moveBuilderUnitResponse);
 		System.out.println();
 
-		RadarRequest radarRequest = objectFactory.createRadarRequest();
-		radarRequest.setUnit(0);
-		radarRequest.getCord().add(new WsCoordinate(4, 16));
-		radarRequest.getCord().add(new WsCoordinate(3, 16));
-		// radarRequest.getCord().add(new WsCoordinate(2, 16));
-		radarRequest.getCord().add(new WsCoordinate(5, 16));
-		radarRequest.getCord().add(new WsCoordinate(6, 16));
+		// waitForMyTurn();
+		//
+		// MoveBuilderUnitRequest moveBuilderUnitRequest1 = new MoveBuilderUnitRequest();
+		// moveBuilderUnitRequest1.setUnit(1);
+		// moveBuilderUnitRequest1.setDirection(exitDirection);
+		// MoveBuilderUnitResponse moveBuilderUnitResponse1 = centralControl.moveBuilderUnit(moveBuilderUnitRequest1);
+		// System.out.println(moveBuilderUnitResponse1);
+		// System.out.println();
 
-		RadarResponse radarResponse = centralControl.radar(radarRequest);
-		List<Scouting> scoutingList = radarResponse.getScout();
-		System.out.println("Radar");
-		for (Scouting scouting : scoutingList) {
-			System.out.println(scouting);
-		}
+		// waitForMyTurn();
+		//
+		// MoveBuilderUnitRequest moveBuilderUnitRequest2 = new MoveBuilderUnitRequest();
+		// moveBuilderUnitRequest2.setUnit(2);
+		// moveBuilderUnitRequest2.setDirection(exitDirection);
+		// MoveBuilderUnitResponse moveBuilderUnitResponse2 = centralControl.moveBuilderUnit(moveBuilderUnitRequest2);
+		// System.out.println(moveBuilderUnitResponse2);
+		// System.out.println();
 
-		System.out.println();
-		System.out.println(radarResponse.getResult());
+		// RadarRequest radarRequest = objectFactory.createRadarRequest();
+		// radarRequest.setUnit(0);
+		// radarRequest.getCord().add(new WsCoordinate(4, 16));
+		// radarRequest.getCord().add(new WsCoordinate(3, 16));
+		// // radarRequest.getCord().add(new WsCoordinate(2, 16));
+		// radarRequest.getCord().add(new WsCoordinate(5, 16));
+		// radarRequest.getCord().add(new WsCoordinate(6, 16));
+		//
+		// RadarResponse radarResponse = centralControl.radar(radarRequest);
+		// List<Scouting> scoutingList = radarResponse.getScout();
+		// System.out.println("Radar");
+		// for (Scouting scouting : scoutingList) {
+		// System.out.println(scouting);
+		// }
+		//
+		// System.out.println();
+		// System.out.println(radarResponse.getResult());
 	}
 
+	private MoveBuilderUnitResponse moveBuilderUnit(int unit, WsDirection wsDirection) {
+		MoveBuilderUnitRequest moveBuilderUnitRequest = new MoveBuilderUnitRequest();
+
+		moveBuilderUnitRequest.setUnit(unit);
+		moveBuilderUnitRequest.setDirection(wsDirection);
+
+		return centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+	}
+
+	private StartGameResponse startGame() {
+		return centralControl.startGame(objectFactory.createStartGameRequest());
+	}
+
+	private GetSpaceShuttlePosResponse getSpaceShuttlePos() {
+		return centralControl.getSpaceShuttlePos(objectFactory.createGetSpaceShuttlePosRequest());
+	}
+
+	private GetSpaceShuttleExitPosResponse getSpaceShuttleExitPos() {
+		return centralControl.getSpaceShuttleExitPos(objectFactory.createGetSpaceShuttleExitPosRequest());
+	}
+
+	private StructureTunnelResponse structureTunnel(int unit, WsDirection wsDirection) {
+		StructureTunnelRequest structureTunnelRequest = new StructureTunnelRequest();
+
+		structureTunnelRequest.setUnit(unit);
+		structureTunnelRequest.setDirection(wsDirection);
+
+		return centralControl.structureTunnel(structureTunnelRequest);
+	}
+
+	private long lastIsMyTurnRequest = 0L;
+
 	private void waitForMyTurn() {
+		do {
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 350);
+
 		boolean isMyTurn = false;
 		do {
 			IsMyTurnRequest isMyTurnRequest = new IsMyTurnRequest();
 			IsMyTurnResponse isMyTurnResponse = centralControl.isMyTurn(isMyTurnRequest);
+			System.out.println(isMyTurnResponse);
+
 			isMyTurn = isMyTurnResponse.isIsYourTurn();
 			if (isMyTurn) {
+				this.lastIsMyTurnRequest = System.currentTimeMillis();
 				break;
 			} else {
 				try {
-					Thread.sleep(300);
+					Thread.sleep(350);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
