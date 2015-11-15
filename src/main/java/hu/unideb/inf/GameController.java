@@ -28,6 +28,8 @@ public class GameController {
 
 	private static ObjectFactory objectFactory = new ObjectFactory();
 	private CentralControl centralControl;
+	private LandingZone landingZone;
+	private long lastIsMyTurnRequest = 0L;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
@@ -46,6 +48,13 @@ public class GameController {
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
 		System.out.println();
 
+		waitForMyTurn();
+		System.out.println(moveBuilderUnit(0, WsDirection.RIGHT));
+		// System.out.println(watch(0));
+
+		// waitForMyTurn();
+		// System.out.println(watch(1));
+
 		// waitForMyTurn();
 		//
 		// WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
@@ -54,13 +63,13 @@ public class GameController {
 		// System.out.println(structureTunnelResponse);
 		// System.out.println();
 
-		waitForMyTurn();
-
-		for (WsBuilderunit wsBuilderunit : landingZone.getUnits()) {
-			System.out.println(wsBuilderunit);
-		}
-
-		System.out.println(watch(0));
+		// waitForMyTurn();
+		//
+		// for (WsBuilderunit wsBuilderunit : landingZone.getUnits()) {
+		// System.out.println(wsBuilderunit);
+		// }
+		//
+		// System.out.println(watch(0));
 
 		// List<WsCoordinate> wsCoordinates = new ArrayList<>();
 		// /*
@@ -169,9 +178,6 @@ public class GameController {
 		return centralControl.structureTunnel(structureTunnelRequest);
 	}
 
-	private long lastIsMyTurnRequest = 0L;
-	private LandingZone landingZone;
-
 	private void waitForMyTurn() {
 		do {
 			try {
@@ -190,6 +196,11 @@ public class GameController {
 			isMyTurn = isMyTurnResponse.isIsYourTurn();
 			if (isMyTurn) {
 				this.lastIsMyTurnRequest = System.currentTimeMillis();
+				// try {
+				// Thread.sleep(300);
+				// } catch (InterruptedException e) {
+				// e.printStackTrace();
+				// }
 				break;
 			} else {
 				try {
