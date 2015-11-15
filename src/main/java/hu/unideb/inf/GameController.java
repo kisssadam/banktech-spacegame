@@ -1,5 +1,6 @@
 package hu.unideb.inf;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import eu.loxon.centralcontrol.CentralControl;
@@ -12,10 +13,14 @@ import eu.loxon.centralcontrol.MoveBuilderUnitResponse;
 import eu.loxon.centralcontrol.ObjectFactory;
 import eu.loxon.centralcontrol.RadarRequest;
 import eu.loxon.centralcontrol.RadarResponse;
+import eu.loxon.centralcontrol.ResultType;
 import eu.loxon.centralcontrol.Scouting;
 import eu.loxon.centralcontrol.StartGameResponse;
 import eu.loxon.centralcontrol.StructureTunnelRequest;
 import eu.loxon.centralcontrol.StructureTunnelResponse;
+import eu.loxon.centralcontrol.WatchRequest;
+import eu.loxon.centralcontrol.WatchResponse;
+import eu.loxon.centralcontrol.WsBuilderunit;
 import eu.loxon.centralcontrol.WsCoordinate;
 import eu.loxon.centralcontrol.WsDirection;
 
@@ -33,7 +38,7 @@ public class GameController {
 		GetSpaceShuttlePosResponse getSpaceShuttlePosResponse = getSpaceShuttlePos();
 		GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse = getSpaceShuttleExitPos();
 
-		LandingZone landingZone = new LandingZone(startGameResponse, getSpaceShuttlePosResponse,
+		this.landingZone = new LandingZone(startGameResponse, getSpaceShuttlePosResponse,
 				getSpaceShuttleExitPosResponse);
 
 		System.out.println(landingZone);
@@ -41,19 +46,38 @@ public class GameController {
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
 		System.out.println();
 
+		// waitForMyTurn();
+		//
+		// WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
+		// landingZone.getSpaceShuttleExitPos());
+		// StructureTunnelResponse structureTunnelResponse = structureTunnel(0, WsDirection.DOWN);
+		// System.out.println(structureTunnelResponse);
+		// System.out.println();
+
 		waitForMyTurn();
 
-		WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
-				landingZone.getSpaceShuttleExitPos());
-		StructureTunnelResponse structureTunnelResponse = structureTunnel(0, exitDirection);
-		System.out.println(structureTunnelResponse);
-		System.out.println();
+		for (WsBuilderunit wsBuilderunit : landingZone.getUnits()) {
+			System.out.println(wsBuilderunit);
+		}
 
-		waitForMyTurn();
+		System.out.println(watch(0));
 
-		MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1, exitDirection);
-		System.out.println(moveBuilderUnitResponse);
-		System.out.println();
+		// List<WsCoordinate> wsCoordinates = new ArrayList<>();
+		// /*
+		// * for (int x = 2; x <= 5; x++) { for (int y = 16; y <= 19; y++) { wsCoordinates.add(new WsCoordinate(x, y));
+		// }
+		// * }
+		// */
+		// wsCoordinates.add(new WsCoordinate(3, 16));
+		// System.out.println(radar(0, wsCoordinates));
+		//
+		//
+
+		// waitForMyTurn();
+		//
+		// MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1, WsDirection.UP);
+		// System.out.println(moveBuilderUnitResponse);
+		// System.out.println();
 
 		// waitForMyTurn();
 		//
@@ -73,23 +97,26 @@ public class GameController {
 		// System.out.println(moveBuilderUnitResponse2);
 		// System.out.println();
 
-		// RadarRequest radarRequest = objectFactory.createRadarRequest();
-		// radarRequest.setUnit(0);
-		// radarRequest.getCord().add(new WsCoordinate(4, 16));
-		// radarRequest.getCord().add(new WsCoordinate(3, 16));
-		// // radarRequest.getCord().add(new WsCoordinate(2, 16));
-		// radarRequest.getCord().add(new WsCoordinate(5, 16));
-		// radarRequest.getCord().add(new WsCoordinate(6, 16));
-		//
-		// RadarResponse radarResponse = centralControl.radar(radarRequest);
-		// List<Scouting> scoutingList = radarResponse.getScout();
-		// System.out.println("Radar");
-		// for (Scouting scouting : scoutingList) {
-		// System.out.println(scouting);
-		// }
 		//
 		// System.out.println();
 		// System.out.println(radarResponse.getResult());
+	}
+
+	private WatchResponse watch(int unit) {
+		WatchRequest watchRequest = objectFactory.createWatchRequest();
+
+		watchRequest.setUnit(unit);
+
+		return centralControl.watch(watchRequest);
+	}
+
+	private RadarResponse radar(int unit, List<WsCoordinate> wsCoordinates) {
+		RadarRequest radarRequest = objectFactory.createRadarRequest();
+
+		radarRequest.setUnit(unit);
+		radarRequest.getCord().addAll(wsCoordinates);
+
+		return centralControl.radar(radarRequest);
 	}
 
 	private MoveBuilderUnitResponse moveBuilderUnit(int unit, WsDirection wsDirection) {
@@ -98,7 +125,27 @@ public class GameController {
 		moveBuilderUnitRequest.setUnit(unit);
 		moveBuilderUnitRequest.setDirection(wsDirection);
 
-		return centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+		MoveBuilderUnitResponse moveBuilderUnitResponse = centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+		if (moveBuilderUnitResponse.getResult().getType().equals(ResultType.DONE)) {
+			landingZone.set(unit, calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection));
+		}
+
+		return moveBuilderUnitResponse;
+	}
+
+	private WsCoordinate calculateWsCoordinate(WsCoordinate start, WsDirection wsDirection) {
+		switch (wsDirection) {
+		case UP:
+			return new WsCoordinate(start.getX(), start.getY() + 1);
+		case DOWN:
+			return new WsCoordinate(start.getX(), start.getY() - 1);
+		case LEFT:
+			return new WsCoordinate(start.getX() - 1, start.getY());
+		case RIGHT:
+			return new WsCoordinate(start.getX() + 1, start.getY());
+		default:
+			return null;
+		}
 	}
 
 	private StartGameResponse startGame() {
@@ -123,6 +170,7 @@ public class GameController {
 	}
 
 	private long lastIsMyTurnRequest = 0L;
+	private LandingZone landingZone;
 
 	private void waitForMyTurn() {
 		do {

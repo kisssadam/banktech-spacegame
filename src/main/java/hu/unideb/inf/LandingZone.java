@@ -13,6 +13,7 @@ import eu.loxon.centralcontrol.WsCoordinate;
 public class LandingZone {
 
 	private WsCoordinate size;
+	private WsCoordinate[] unitPosition;
 	private List<WsBuilderunit> units;
 	private WsCoordinate spaceShuttlePos;
 	private WsCoordinate spaceShuttleExitPos;
@@ -22,6 +23,7 @@ public class LandingZone {
 			GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse) {
 		this.size = startGameResponse.getSize();
 		this.units = startGameResponse.getUnits();
+		this.unitPosition = new WsCoordinate[4];
 		this.spaceShuttlePos = getSpaceShuttlePosResponse.getCord();
 		this.spaceShuttleExitPos = getSpaceShuttleExitPosResponse.getCord();
 		initLandingZone();
@@ -38,6 +40,18 @@ public class LandingZone {
 
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
 		landingZone[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK.firstChar();
+	}
+
+	public void set(int unit, WsCoordinate wsCoordinate) {
+		this.unitPosition[unit] = wsCoordinate;
+	}
+
+	public WsCoordinate[] getUnitPosition() {
+		return unitPosition;
+	}
+
+	public void setUnitPosition(WsCoordinate[] unitPosition) {
+		this.unitPosition = unitPosition;
 	}
 
 	public WsCoordinate getSpaceShuttlePos() {
