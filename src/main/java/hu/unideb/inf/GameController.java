@@ -3,7 +3,10 @@ package hu.unideb.inf;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.loxon.centralcontrol.ActionCostResponse;
 import eu.loxon.centralcontrol.CentralControl;
+import eu.loxon.centralcontrol.ExplodeCellRequest;
+import eu.loxon.centralcontrol.ExplodeCellResponse;
 import eu.loxon.centralcontrol.GetSpaceShuttleExitPosResponse;
 import eu.loxon.centralcontrol.GetSpaceShuttlePosResponse;
 import eu.loxon.centralcontrol.IsMyTurnRequest;
@@ -49,18 +52,16 @@ public class GameController {
 		System.out.println();
 
 		for (int i = 0; i < 20; i++) {
-			
 
-			
-			//waitForMyTurn();
-			System.out.println(watch(waitForMyTurn()));
-			
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			waitForMyTurn();
+			// System.out.println(watch(waitForMyTurn()));
+
+			// try {
+			// Thread.sleep(3000);
+			// } catch (InterruptedException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// }
 		}
 
 		// try {
@@ -198,6 +199,19 @@ public class GameController {
 		return centralControl.getSpaceShuttleExitPos(objectFactory.createGetSpaceShuttleExitPosRequest());
 	}
 
+	private ExplodeCellResponse explodeCell(int unit, WsDirection wsDirection) {
+		ExplodeCellRequest explodeCellRequest = objectFactory.createExplodeCellRequest();
+
+		explodeCellRequest.setUnit(unit);
+		explodeCellRequest.setDirection(wsDirection);
+
+		return centralControl.explodeCell(explodeCellRequest);
+	}
+
+	private ActionCostResponse getActionCost() {
+		return centralControl.getActionCost(objectFactory.createActionCostRequest());
+	}
+
 	private StructureTunnelResponse structureTunnel(int unit, WsDirection wsDirection) {
 		StructureTunnelRequest structureTunnelRequest = new StructureTunnelRequest();
 
@@ -207,40 +221,38 @@ public class GameController {
 		return centralControl.structureTunnel(structureTunnelRequest);
 	}
 
-	private int waitForMyTurn() {
-//		do {
-//			try {
-//				Thread.sleep(50);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 350);
+	private IsMyTurnResponse waitForMyTurn() {
+		try {
+			return tryToWaitForMyTurn();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private IsMyTurnResponse tryToWaitForMyTurn() throws InterruptedException {
+		IsMyTurnResponse isMyTurnResponse = null;
+
+		do {
+			Thread.sleep(50);
+		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 300);
 
 		boolean isMyTurn = false;
 		do {
 			IsMyTurnRequest isMyTurnRequest = new IsMyTurnRequest();
-			IsMyTurnResponse isMyTurnResponse = centralControl.isMyTurn(isMyTurnRequest);
+			isMyTurnResponse = centralControl.isMyTurn(isMyTurnRequest);
 			System.out.println(isMyTurnResponse);
 
 			isMyTurn = isMyTurnResponse.isIsYourTurn();
 			if (isMyTurn) {
 				this.lastIsMyTurnRequest = System.currentTimeMillis();
-				// try {
-				// Thread.sleep(350);
-				// } catch (InterruptedException e) {
-				// e.printStackTrace();
-				// }
-				return isMyTurnResponse.getResult().getBuilderUnit();
+				break;
 			} else {
-				try {
-					Thread.sleep(350);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Thread.sleep(350);
 			}
 		} while (!isMyTurn);
-		
-		return -1;
+
+		return isMyTurnResponse;
 	}
 
 	private WsDirection determineExitDirection(WsCoordinate spaceShuttlePos, WsCoordinate spaceShuttleExitPos) {
