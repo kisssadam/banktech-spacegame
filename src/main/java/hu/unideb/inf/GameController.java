@@ -108,6 +108,6 @@ public class GameController {
 			return WsDirection.UP;
 		} else {
 			return WsDirection.DOWN;
-		}
+		} 
 	}
 }

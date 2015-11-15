@@ -80,5 +80,5 @@ public class WsCoordinate {
 	public String toString() {
 		return "WsCoordinate [x=" + x + ", y=" + y + "]";
 	}
-
+ 
 }
