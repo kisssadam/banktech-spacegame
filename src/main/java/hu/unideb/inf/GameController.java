@@ -48,8 +48,27 @@ public class GameController {
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
 		System.out.println();
 
-		waitForMyTurn();
-		System.out.println(moveBuilderUnit(0, WsDirection.RIGHT));
+		for (int i = 0; i < 20; i++) {
+			
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//waitForMyTurn();
+			System.out.println(watch(waitForMyTurn()));
+		}
+
+		// try {
+		// Thread.sleep(3000);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+
+		// System.out.println(moveBuilderUnit(0, WsDirection.RIGHT));
 		// System.out.println(watch(0));
 
 		// waitForMyTurn();
@@ -57,9 +76,11 @@ public class GameController {
 
 		// waitForMyTurn();
 		//
-		// WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
+		// WsDirection exitDirection =
+		// determineExitDirection(landingZone.getSpaceShuttlePos(),
 		// landingZone.getSpaceShuttleExitPos());
-		// StructureTunnelResponse structureTunnelResponse = structureTunnel(0, WsDirection.DOWN);
+		// StructureTunnelResponse structureTunnelResponse = structureTunnel(0,
+		// WsDirection.DOWN);
 		// System.out.println(structureTunnelResponse);
 		// System.out.println();
 
@@ -73,7 +94,8 @@ public class GameController {
 
 		// List<WsCoordinate> wsCoordinates = new ArrayList<>();
 		// /*
-		// * for (int x = 2; x <= 5; x++) { for (int y = 16; y <= 19; y++) { wsCoordinates.add(new WsCoordinate(x, y));
+		// * for (int x = 2; x <= 5; x++) { for (int y = 16; y <= 19; y++) {
+		// wsCoordinates.add(new WsCoordinate(x, y));
 		// }
 		// * }
 		// */
@@ -84,25 +106,30 @@ public class GameController {
 
 		// waitForMyTurn();
 		//
-		// MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1, WsDirection.UP);
+		// MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1,
+		// WsDirection.UP);
 		// System.out.println(moveBuilderUnitResponse);
 		// System.out.println();
 
 		// waitForMyTurn();
 		//
-		// MoveBuilderUnitRequest moveBuilderUnitRequest1 = new MoveBuilderUnitRequest();
+		// MoveBuilderUnitRequest moveBuilderUnitRequest1 = new
+		// MoveBuilderUnitRequest();
 		// moveBuilderUnitRequest1.setUnit(1);
 		// moveBuilderUnitRequest1.setDirection(exitDirection);
-		// MoveBuilderUnitResponse moveBuilderUnitResponse1 = centralControl.moveBuilderUnit(moveBuilderUnitRequest1);
+		// MoveBuilderUnitResponse moveBuilderUnitResponse1 =
+		// centralControl.moveBuilderUnit(moveBuilderUnitRequest1);
 		// System.out.println(moveBuilderUnitResponse1);
 		// System.out.println();
 
 		// waitForMyTurn();
 		//
-		// MoveBuilderUnitRequest moveBuilderUnitRequest2 = new MoveBuilderUnitRequest();
+		// MoveBuilderUnitRequest moveBuilderUnitRequest2 = new
+		// MoveBuilderUnitRequest();
 		// moveBuilderUnitRequest2.setUnit(2);
 		// moveBuilderUnitRequest2.setDirection(exitDirection);
-		// MoveBuilderUnitResponse moveBuilderUnitResponse2 = centralControl.moveBuilderUnit(moveBuilderUnitRequest2);
+		// MoveBuilderUnitResponse moveBuilderUnitResponse2 =
+		// centralControl.moveBuilderUnit(moveBuilderUnitRequest2);
 		// System.out.println(moveBuilderUnitResponse2);
 		// System.out.println();
 
@@ -178,14 +205,14 @@ public class GameController {
 		return centralControl.structureTunnel(structureTunnelRequest);
 	}
 
-	private void waitForMyTurn() {
-		do {
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 350);
+	private int waitForMyTurn() {
+//		do {
+//			try {
+//				Thread.sleep(50);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 350);
 
 		boolean isMyTurn = false;
 		do {
@@ -197,11 +224,11 @@ public class GameController {
 			if (isMyTurn) {
 				this.lastIsMyTurnRequest = System.currentTimeMillis();
 				// try {
-				// Thread.sleep(300);
+				// Thread.sleep(350);
 				// } catch (InterruptedException e) {
 				// e.printStackTrace();
 				// }
-				break;
+				return isMyTurnResponse.getResult().getBuilderUnit();
 			} else {
 				try {
 					Thread.sleep(350);
@@ -210,6 +237,8 @@ public class GameController {
 				}
 			}
 		} while (!isMyTurn);
+		
+		return -1;
 	}
 
 	private WsDirection determineExitDirection(WsCoordinate spaceShuttlePos, WsCoordinate spaceShuttleExitPos) {
