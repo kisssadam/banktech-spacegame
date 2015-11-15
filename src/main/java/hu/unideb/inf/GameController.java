@@ -50,15 +50,17 @@ public class GameController {
 
 		for (int i = 0; i < 20; i++) {
 			
+
+			
+			//waitForMyTurn();
+			System.out.println(watch(waitForMyTurn()));
+			
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			//waitForMyTurn();
-			System.out.println(watch(waitForMyTurn()));
 		}
 
 		// try {
