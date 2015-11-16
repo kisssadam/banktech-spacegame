@@ -1,6 +1,5 @@
 package hu.unideb.inf;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import eu.loxon.centralcontrol.ActionCostResponse;
@@ -23,7 +22,6 @@ import eu.loxon.centralcontrol.StructureTunnelRequest;
 import eu.loxon.centralcontrol.StructureTunnelResponse;
 import eu.loxon.centralcontrol.WatchRequest;
 import eu.loxon.centralcontrol.WatchResponse;
-import eu.loxon.centralcontrol.WsBuilderunit;
 import eu.loxon.centralcontrol.WsCoordinate;
 import eu.loxon.centralcontrol.WsDirection;
 
@@ -33,6 +31,10 @@ public class GameController {
 	private CentralControl centralControl;
 	private LandingZone landingZone;
 	private long lastIsMyTurnRequest = 0L;
+	private static final String TEAM_NAME = "0x70unideb";
+	private int drillCost;
+	private int explodeCost;
+	private int moveCost;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
@@ -45,7 +47,10 @@ public class GameController {
 
 		this.landingZone = new LandingZone(startGameResponse, getSpaceShuttlePosResponse,
 				getSpaceShuttleExitPosResponse);
-
+		WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
+				landingZone.getSpaceShuttleExitPos());
+		StructureTunnelResponse structureTunnelResponse = structureTunnel(
+				getSpaceShuttleExitPosResponse.getResult().getBuilderUnit(), exitDirection);
 		System.out.println(landingZone);
 		System.out.println();
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
@@ -69,94 +74,45 @@ public class GameController {
 		builderUnit = isMyTurnResponse.getResult().getBuilderUnit();
 		System.out.println(moveBuilderUnit(builderUnit, WsDirection.RIGHT));
 
-		// for (int i = 0; i < 20; i++) {
-		//
-		// waitForMyTurn();
-		// System.out.println(watch(waitForMyTurn()));
+	}
 
-		// try {
-		// Thread.sleep(3000);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// }
+	private int rateCell(Scouting scouting) {
+		int points = 0;
+		switch (scouting.getObject()) {
+		case TUNNEL:
+			if (!scouting.getTeam().equals(TEAM_NAME)) {
+				points = explodeCost;
+			}else{
+				points = moveCost;
+			}
+			break;
+		case SHUTTLE:
+			points = Integer.MAX_VALUE;
+			break;
+		case BUILDER_UNIT:
+			points = Integer.MAX_VALUE;
+			break;
+		case ROCK:
+			points = drillCost;
+			break;
+		case GRANITE:
+			points = explodeCost + drillCost;
+			break;
+		case OBSIDIAN:
+			points = Integer.MAX_VALUE;
+			break;
+		case UNINITIALIZED:
+			break;
+		}
 
-		// try {
-		// Thread.sleep(3000);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
+		return points;
+	}
 
-		// System.out.println(moveBuilderUnit(0, WsDirection.RIGHT));
-		// System.out.println(watch(0));
-
-		// waitForMyTurn();
-		// System.out.println(watch(1));
-
-		// waitForMyTurn();
-		//
-		// WsDirection exitDirection =
-		// determineExitDirection(landingZone.getSpaceShuttlePos(),
-		// landingZone.getSpaceShuttleExitPos());
-		// StructureTunnelResponse structureTunnelResponse = structureTunnel(0,
-		// WsDirection.DOWN);
-		// System.out.println(structureTunnelResponse);
-		// System.out.println();
-
-		// waitForMyTurn();
-		//
-		// for (WsBuilderunit wsBuilderunit : landingZone.getUnits()) {
-		// System.out.println(wsBuilderunit);
-		// }
-		//
-		// System.out.println(watch(0));
-
-		// List<WsCoordinate> wsCoordinates = new ArrayList<>();
-		// /*
-		// * for (int x = 2; x <= 5; x++) { for (int y = 16; y <= 19; y++) {
-		// wsCoordinates.add(new WsCoordinate(x, y));
-		// }
-		// * }
-		// */
-		// wsCoordinates.add(new WsCoordinate(3, 16));
-		// System.out.println(radar(0, wsCoordinates));
-		//
-		//
-
-		// waitForMyTurn();
-		//
-		// MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1,
-		// WsDirection.UP);
-		// System.out.println(moveBuilderUnitResponse);
-		// System.out.println();
-
-		// waitForMyTurn();
-		//
-		// MoveBuilderUnitRequest moveBuilderUnitRequest1 = new
-		// MoveBuilderUnitRequest();
-		// moveBuilderUnitRequest1.setUnit(1);
-		// moveBuilderUnitRequest1.setDirection(exitDirection);
-		// MoveBuilderUnitResponse moveBuilderUnitResponse1 =
-		// centralControl.moveBuilderUnit(moveBuilderUnitRequest1);
-		// System.out.println(moveBuilderUnitResponse1);
-		// System.out.println();
-
-		// waitForMyTurn();
-		//
-		// MoveBuilderUnitRequest moveBuilderUnitRequest2 = new
-		// MoveBuilderUnitRequest();
-		// moveBuilderUnitRequest2.setUnit(2);
-		// moveBuilderUnitRequest2.setDirection(exitDirection);
-		// MoveBuilderUnitResponse moveBuilderUnitResponse2 =
-		// centralControl.moveBuilderUnit(moveBuilderUnitRequest2);
-		// System.out.println(moveBuilderUnitResponse2);
-		// System.out.println();
-
-		//
-		// System.out.println();
-		// System.out.println(radarResponse.getResult());
+	private List<Scouting> getSurroundingTerrain(int unit) {
+		WatchResponse watch = watch(unit);
+		// WsCoordinate wsCoordinate = landingZone.getUnitPosition()[unit];
+		List<Scouting> scoutings = watch.getScout();
+		return scoutings;
 	}
 
 	private WatchResponse watch(int unit) {
@@ -227,8 +183,14 @@ public class GameController {
 		return centralControl.explodeCell(explodeCellRequest);
 	}
 
+	// Frissít 3 mezőt, fúrási, robbantási és mozgatási költségek. ez alapján
+	// értékelünk cellákat
 	private ActionCostResponse getActionCost() {
-		return centralControl.getActionCost(objectFactory.createActionCostRequest());
+		ActionCostResponse actionCost = centralControl.getActionCost(objectFactory.createActionCostRequest());
+		drillCost = actionCost.getDrill();
+		explodeCost = actionCost.getExplode();
+		moveCost = actionCost.getMove();
+		return actionCost;
 	}
 
 	private StructureTunnelResponse structureTunnel(int unit, WsDirection wsDirection) {
@@ -288,3 +250,91 @@ public class GameController {
 		}
 	}
 }
+// for (int i = 0; i < 20; i++) {
+//
+// waitForMyTurn();
+// System.out.println(watch(waitForMyTurn()));
+
+// try {
+// Thread.sleep(3000);
+// } catch (InterruptedException e) {
+// // TODO Auto-generated catch block
+// e.printStackTrace();
+// }
+// }
+
+// try {
+// Thread.sleep(3000);
+// } catch (InterruptedException e) {
+// // TODO Auto-generated catch block
+// e.printStackTrace();
+// }
+
+// System.out.println(moveBuilderUnit(0, WsDirection.RIGHT));
+// System.out.println(watch(0));
+
+// waitForMyTurn();
+// System.out.println(watch(1));
+
+// waitForMyTurn();
+//
+// WsDirection exitDirection =
+// determineExitDirection(landingZone.getSpaceShuttlePos(),
+// landingZone.getSpaceShuttleExitPos());
+// StructureTunnelResponse structureTunnelResponse = structureTunnel(0,
+// WsDirection.DOWN);
+// System.out.println(structureTunnelResponse);
+// System.out.println();
+
+// waitForMyTurn();
+//
+// for (WsBuilderunit wsBuilderunit : landingZone.getUnits()) {
+// System.out.println(wsBuilderunit);
+// }
+//
+// System.out.println(watch(0));
+
+// List<WsCoordinate> wsCoordinates = new ArrayList<>();
+// /*
+// * for (int x = 2; x <= 5; x++) { for (int y = 16; y <= 19; y++) {
+// wsCoordinates.add(new WsCoordinate(x, y));
+// }
+// * }
+// */
+// wsCoordinates.add(new WsCoordinate(3, 16));
+// System.out.println(radar(0, wsCoordinates));
+//
+//
+
+// waitForMyTurn();
+//
+// MoveBuilderUnitResponse moveBuilderUnitResponse = moveBuilderUnit(1,
+// WsDirection.UP);
+// System.out.println(moveBuilderUnitResponse);
+// System.out.println();
+
+// waitForMyTurn();
+//
+// MoveBuilderUnitRequest moveBuilderUnitRequest1 = new
+// MoveBuilderUnitRequest();
+// moveBuilderUnitRequest1.setUnit(1);
+// moveBuilderUnitRequest1.setDirection(exitDirection);
+// MoveBuilderUnitResponse moveBuilderUnitResponse1 =
+// centralControl.moveBuilderUnit(moveBuilderUnitRequest1);
+// System.out.println(moveBuilderUnitResponse1);
+// System.out.println();
+
+// waitForMyTurn();
+//
+// MoveBuilderUnitRequest moveBuilderUnitRequest2 = new
+// MoveBuilderUnitRequest();
+// moveBuilderUnitRequest2.setUnit(2);
+// moveBuilderUnitRequest2.setDirection(exitDirection);
+// MoveBuilderUnitResponse moveBuilderUnitResponse2 =
+// centralControl.moveBuilderUnit(moveBuilderUnitRequest2);
+// System.out.println(moveBuilderUnitResponse2);
+// System.out.println();
+
+//
+// System.out.println();
+// System.out.println(radarResponse.getResult());
