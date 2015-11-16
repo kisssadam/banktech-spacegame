@@ -10,7 +10,7 @@ import eu.loxon.centralcontrol.CentralControlServiceService;
 
 public class Main {
 
-	public static void main(String[] args) throws MalformedURLException {
+	public static void main(String[] args) throws MalformedURLException, InterruptedException {
 		args = getTestArgsArray();
 		CentralControl centralControl = getCentralControl(args);
 

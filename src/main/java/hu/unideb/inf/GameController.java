@@ -38,7 +38,7 @@ public class GameController {
 		this.centralControl = centralControl;
 	}
 
-	public void playGame() {
+	public void playGame() throws InterruptedException {
 		StartGameResponse startGameResponse = startGame();
 		GetSpaceShuttlePosResponse getSpaceShuttlePosResponse = getSpaceShuttlePos();
 		GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse = getSpaceShuttleExitPos();
@@ -51,18 +51,36 @@ public class GameController {
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
 		System.out.println();
 
-		for (int i = 0; i < 20; i++) {
-
-			waitForMyTurn();
-			// System.out.println(watch(waitForMyTurn()));
-
-			// try {
-			// Thread.sleep(3000);
-			// } catch (InterruptedException e) {
-			// // TODO Auto-generated catch block
-			// e.printStackTrace();
-			// }
+		for (int i = 0; i < 70; i++) {
+			System.out.println(waitForMyTurn());
+			try {
+				Thread.sleep(3 * 1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+
+		IsMyTurnResponse isMyTurnResponse = tryToWaitForMyTurn();
+		System.out.println(isMyTurnResponse);
+		int builderUnit = isMyTurnResponse.getResult().getBuilderUnit();
+		System.out.println(structureTunnel(builderUnit, WsDirection.RIGHT));
+
+		isMyTurnResponse = waitForMyTurn();
+		builderUnit = isMyTurnResponse.getResult().getBuilderUnit();
+		System.out.println(moveBuilderUnit(builderUnit, WsDirection.RIGHT));
+
+		// for (int i = 0; i < 20; i++) {
+		//
+		// waitForMyTurn();
+		// System.out.println(watch(waitForMyTurn()));
+
+		// try {
+		// Thread.sleep(3000);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
 
 		// try {
 		// Thread.sleep(3000);
@@ -173,6 +191,7 @@ public class GameController {
 	}
 
 	private WsCoordinate calculateWsCoordinate(WsCoordinate start, WsDirection wsDirection) {
+		System.out.println("start: " + start);
 		switch (wsDirection) {
 		case UP:
 			return new WsCoordinate(start.getX(), start.getY() + 1);

@@ -23,9 +23,15 @@ public class LandingZone {
 			GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse) {
 		this.size = startGameResponse.getSize();
 		this.units = startGameResponse.getUnits();
-		this.unitPosition = new WsCoordinate[4];
+
 		this.spaceShuttlePos = getSpaceShuttlePosResponse.getCord();
 		this.spaceShuttleExitPos = getSpaceShuttleExitPosResponse.getCord();
+
+		this.unitPosition = new WsCoordinate[4];
+		for (int i = 0; i < unitPosition.length; i++) {
+			unitPosition[i] = this.spaceShuttlePos;
+		}
+
 		initLandingZone();
 	}
 
