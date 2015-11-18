@@ -96,8 +96,8 @@ public class LandingZone {
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
 
-		for (int j = terrain[0].length - 1; j > 0; j--) {
-			for (int i = 1; i < terrain.length; i++) {
+		for (int j = terrain[0].length - 1; j >= 0; j--) {
+			for (int i = 0; i < terrain.length; i++) {
 				stringBuilder.append(terrain[i][j].firstChar());
 				stringBuilder.append(i + 1 < terrain.length ? " " : System.lineSeparator());
 			}
