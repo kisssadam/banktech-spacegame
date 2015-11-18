@@ -4,6 +4,7 @@ import java.util.List;
 
 import eu.loxon.centralcontrol.ActionCostResponse;
 import eu.loxon.centralcontrol.CentralControl;
+import eu.loxon.centralcontrol.CommonResp;
 import eu.loxon.centralcontrol.ExplodeCellRequest;
 import eu.loxon.centralcontrol.ExplodeCellResponse;
 import eu.loxon.centralcontrol.GetSpaceShuttleExitPosResponse;
@@ -13,6 +14,7 @@ import eu.loxon.centralcontrol.IsMyTurnResponse;
 import eu.loxon.centralcontrol.MoveBuilderUnitRequest;
 import eu.loxon.centralcontrol.MoveBuilderUnitResponse;
 import eu.loxon.centralcontrol.ObjectFactory;
+import eu.loxon.centralcontrol.ObjectType;
 import eu.loxon.centralcontrol.RadarRequest;
 import eu.loxon.centralcontrol.RadarResponse;
 import eu.loxon.centralcontrol.ResultType;
@@ -27,14 +29,16 @@ import eu.loxon.centralcontrol.WsDirection;
 
 public class GameController {
 
+	public static final String TEAM_NAME = "0x70unideb";
+
 	private static ObjectFactory objectFactory = new ObjectFactory();
 	private CentralControl centralControl;
 	private LandingZone landingZone;
 	private long lastIsMyTurnRequest = 0L;
-	private static final String TEAM_NAME = "0x70unideb";
 	private int drillCost;
 	private int explodeCost;
 	private int moveCost;
+	private int actualBuilderUnit;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
@@ -47,32 +51,20 @@ public class GameController {
 
 		this.landingZone = new LandingZone(startGameResponse, getSpaceShuttlePosResponse,
 				getSpaceShuttleExitPosResponse);
+		
+		System.out.println(getActionCost());
 		WsDirection exitDirection = determineExitDirection(landingZone.getSpaceShuttlePos(),
 				landingZone.getSpaceShuttleExitPos());
-		StructureTunnelResponse structureTunnelResponse = structureTunnel(
-				getSpaceShuttleExitPosResponse.getResult().getBuilderUnit(), exitDirection);
+		System.out.println(watch(actualBuilderUnit));
+		System.out.println(landingZone);
+		StructureTunnelResponse structureTunnelResponse = structureTunnel(actualBuilderUnit, exitDirection);
+		moveBuilderUnit(actualBuilderUnit, exitDirection);
+		System.out.println(watch(actualBuilderUnit));
+
 		System.out.println(landingZone);
 		System.out.println();
 		System.out.println(getSpaceShuttleExitPosResponse.getResult());
 		System.out.println();
-
-		for (int i = 0; i < 70; i++) {
-			System.out.println(waitForMyTurn());
-			try {
-				Thread.sleep(3 * 1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-
-		IsMyTurnResponse isMyTurnResponse = tryToWaitForMyTurn();
-		System.out.println(isMyTurnResponse);
-		int builderUnit = isMyTurnResponse.getResult().getBuilderUnit();
-		System.out.println(structureTunnel(builderUnit, WsDirection.RIGHT));
-
-		isMyTurnResponse = waitForMyTurn();
-		builderUnit = isMyTurnResponse.getResult().getBuilderUnit();
-		System.out.println(moveBuilderUnit(builderUnit, WsDirection.RIGHT));
 
 	}
 
@@ -80,9 +72,9 @@ public class GameController {
 		int points = 0;
 		switch (scouting.getObject()) {
 		case TUNNEL:
-			if (!scouting.getTeam().equals(TEAM_NAME)) {
+			if (!TEAM_NAME.equals(scouting.getTeam())) {
 				points = explodeCost;
-			}else{
+			} else {
 				points = moveCost;
 			}
 			break;
@@ -120,7 +112,10 @@ public class GameController {
 
 		watchRequest.setUnit(unit);
 
-		return centralControl.watch(watchRequest);
+		WatchResponse response = centralControl.watch(watchRequest);
+		this.actualBuilderUnit = response.getResult().getBuilderUnit();
+		landingZone.processScoutings(response.getScout());
+		return response;
 	}
 
 	private RadarResponse radar(int unit, List<WsCoordinate> wsCoordinates) {
@@ -129,7 +124,10 @@ public class GameController {
 		radarRequest.setUnit(unit);
 		radarRequest.getCord().addAll(wsCoordinates);
 
-		return centralControl.radar(radarRequest);
+		RadarResponse response = centralControl.radar(radarRequest);
+		this.actualBuilderUnit = response.getResult().getBuilderUnit();
+		landingZone.processScoutings(response.getScout());
+		return response;
 	}
 
 	private MoveBuilderUnitResponse moveBuilderUnit(int unit, WsDirection wsDirection) {
@@ -138,12 +136,13 @@ public class GameController {
 		moveBuilderUnitRequest.setUnit(unit);
 		moveBuilderUnitRequest.setDirection(wsDirection);
 
-		MoveBuilderUnitResponse moveBuilderUnitResponse = centralControl.moveBuilderUnit(moveBuilderUnitRequest);
-		if (moveBuilderUnitResponse.getResult().getType().equals(ResultType.DONE)) {
-			landingZone.set(unit, calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection));
+		MoveBuilderUnitResponse response = centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+		if (response.getResult().getType().equals(ResultType.DONE)) {
+			landingZone.setUnitPosition(unit, calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection));
 		}
-
-		return moveBuilderUnitResponse;
+		this.actualBuilderUnit = response.getResult().getBuilderUnit();
+		landingZone.setTerrain(calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection), ObjectType.BUILDER_UNIT);
+		return response;
 	}
 
 	private WsCoordinate calculateWsCoordinate(WsCoordinate start, WsDirection wsDirection) {
@@ -162,16 +161,29 @@ public class GameController {
 		}
 	}
 
+	private void refreshActualBuilderUnit(CommonResp result) {
+		this.actualBuilderUnit = result.getBuilderUnit();
+		System.out.println("Actual builder unit: " + actualBuilderUnit);
+	}
+
 	private StartGameResponse startGame() {
-		return centralControl.startGame(objectFactory.createStartGameRequest());
+		StartGameResponse response = centralControl.startGame(objectFactory.createStartGameRequest());
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	private GetSpaceShuttlePosResponse getSpaceShuttlePos() {
-		return centralControl.getSpaceShuttlePos(objectFactory.createGetSpaceShuttlePosRequest());
+		GetSpaceShuttlePosResponse response = centralControl
+				.getSpaceShuttlePos(objectFactory.createGetSpaceShuttlePosRequest());
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	private GetSpaceShuttleExitPosResponse getSpaceShuttleExitPos() {
-		return centralControl.getSpaceShuttleExitPos(objectFactory.createGetSpaceShuttleExitPosRequest());
+		GetSpaceShuttleExitPosResponse response = centralControl
+				.getSpaceShuttleExitPos(objectFactory.createGetSpaceShuttleExitPosRequest());
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	private ExplodeCellResponse explodeCell(int unit, WsDirection wsDirection) {
@@ -180,17 +192,20 @@ public class GameController {
 		explodeCellRequest.setUnit(unit);
 		explodeCellRequest.setDirection(wsDirection);
 
-		return centralControl.explodeCell(explodeCellRequest);
+		ExplodeCellResponse response = centralControl.explodeCell(explodeCellRequest);
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	// Frissít 3 mezőt, fúrási, robbantási és mozgatási költségek. ez alapján
 	// értékelünk cellákat
 	private ActionCostResponse getActionCost() {
-		ActionCostResponse actionCost = centralControl.getActionCost(objectFactory.createActionCostRequest());
-		drillCost = actionCost.getDrill();
-		explodeCost = actionCost.getExplode();
-		moveCost = actionCost.getMove();
-		return actionCost;
+		ActionCostResponse response = centralControl.getActionCost(objectFactory.createActionCostRequest());
+		drillCost = response.getDrill();
+		explodeCost = response.getExplode();
+		moveCost = response.getMove();
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	private StructureTunnelResponse structureTunnel(int unit, WsDirection wsDirection) {
@@ -199,7 +214,12 @@ public class GameController {
 		structureTunnelRequest.setUnit(unit);
 		structureTunnelRequest.setDirection(wsDirection);
 
-		return centralControl.structureTunnel(structureTunnelRequest);
+		StructureTunnelResponse response = centralControl.structureTunnel(structureTunnelRequest);
+		if(ResultType.DONE.equals(response.getResult().getType())){
+			landingZone.setTerrain(calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection), ObjectType.TUNNEL);
+		}
+		refreshActualBuilderUnit(response.getResult());
+		return response;
 	}
 
 	private IsMyTurnResponse waitForMyTurn() {
@@ -212,7 +232,7 @@ public class GameController {
 	}
 
 	private IsMyTurnResponse tryToWaitForMyTurn() throws InterruptedException {
-		IsMyTurnResponse isMyTurnResponse = null;
+		IsMyTurnResponse response = null;
 
 		do {
 			Thread.sleep(50);
@@ -221,10 +241,11 @@ public class GameController {
 		boolean isMyTurn = false;
 		do {
 			IsMyTurnRequest isMyTurnRequest = new IsMyTurnRequest();
-			isMyTurnResponse = centralControl.isMyTurn(isMyTurnRequest);
-			System.out.println(isMyTurnResponse);
+			response = centralControl.isMyTurn(isMyTurnRequest);
+			refreshActualBuilderUnit(response.getResult());
+			System.out.println(response);
 
-			isMyTurn = isMyTurnResponse.isIsYourTurn();
+			isMyTurn = response.isIsYourTurn();
 			if (isMyTurn) {
 				this.lastIsMyTurnRequest = System.currentTimeMillis();
 				break;
@@ -233,7 +254,7 @@ public class GameController {
 			}
 		} while (!isMyTurn);
 
-		return isMyTurnResponse;
+		return response;
 	}
 
 	private WsDirection determineExitDirection(WsCoordinate spaceShuttlePos, WsCoordinate spaceShuttleExitPos) {
