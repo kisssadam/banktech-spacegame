@@ -44,6 +44,14 @@ public class LandingZone {
 			Arrays.fill(terrain[i], ObjectType.UNINITIALIZED);
 			Arrays.fill(ownerTeam[i], "");
 		}
+		for (int i = 0; i < terrain.length; i++) {
+			terrain[i][0] = ObjectType.OBSIDIAN;
+			terrain[i][size.getY()] = ObjectType.OBSIDIAN;
+		}
+		for (int i = 0; i < terrain[0].length; i++) {
+			terrain[0][i] = ObjectType.OBSIDIAN;
+			terrain[size.getX()][i] = ObjectType.OBSIDIAN;
+		}
 
 		terrain[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = ObjectType.SHUTTLE;
 		ownerTeam[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = GameController.TEAM_NAME;
@@ -65,6 +73,7 @@ public class LandingZone {
 	}
 
 	public void setUnitPosition(int unit, WsCoordinate wsCoordinate) {
+		System.out.println("Setting no. " +unit + " unit position to: " + wsCoordinate);
 		this.unitPosition[unit] = wsCoordinate;
 	}
 
