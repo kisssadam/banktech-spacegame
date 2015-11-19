@@ -45,6 +45,50 @@ public class GameController {
 	}
 
 	public void playGame() throws InterruptedException {
+		doFirstSteps();
+
+		IsMyTurnResponse isMyTurnResponse = waitForMyTurn();
+		while (isMyTurnResponse.getResult().getTurnsLeft() > 0) {
+			doNextStep(isMyTurnResponse);
+		}
+	}
+
+	private void doNextStep(IsMyTurnResponse isMyTurnResponse) {
+		List<WsCoordinate> createRadarZone = createRadarZone(landingZone.getUnitPosition()[this.actualBuilderUnit]);
+		LandingZonePart landingZonePart = determineLandingZonePart(landingZone.getSpaceShuttlePos());
+		
+	}
+
+	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
+		WsCoordinate central = determineCentralCoordinates();
+		int centralRadius = determineCentralRadius();
+
+		int x = coordinate.getX();
+		int y = coordinate.getY();
+
+		if (x > central.getX() - centralRadius && x < central.getX() + centralRadius
+				&& y > central.getY() - centralRadius && y < central.getY() + centralRadius) {
+			return LandingZonePart.CENTER;
+		} else if (x <= central.getX() && y >= central.getY()) {
+			return LandingZonePart.TOP_LEFT;
+		} else if (x > central.getX() && y >= central.getY()) {
+			return LandingZonePart.TOP_RIGHT;
+		} else if (x <= central.getX() && y < central.getY()) {
+			return LandingZonePart.BOTTOM_LEFT;
+		} else {
+			return LandingZonePart.BOTTOM_RIGHT;
+		}
+	}
+
+	private int determineCentralRadius() {
+		return (sizeOfLZ.getX() < sizeOfLZ.getY() ? sizeOfLZ.getX() : sizeOfLZ.getY()) / 4;
+	}
+
+	private WsCoordinate determineCentralCoordinates() {
+		return new WsCoordinate(sizeOfLZ.getX() / 2, sizeOfLZ.getY() / 2);
+	}
+
+	private void doFirstSteps() {
 		StartGameResponse startGameResponse = startGame();
 		GetSpaceShuttlePosResponse shuttlePosResponse = getSpaceShuttlePos();
 		GetSpaceShuttleExitPosResponse shuttleExitPosResponse = getSpaceShuttleExitPos();
@@ -72,7 +116,6 @@ public class GameController {
 		coordinatesToScan.removeAll(coordinatesToRemove);
 
 		while (coordinatesToScan.size() != 0) {
-
 			IsMyTurnResponse waitForMyTurn = waitForMyTurn();
 			if (actualBuilderUnit == 0) {
 				List<WsCoordinate> determineUnitZeroRadarCells = determineUnitZeroRadarCells(
@@ -85,14 +128,13 @@ public class GameController {
 				radar(actualBuilderUnit, subList);
 				coordinatesToScan.removeAll(subList);
 
-				// watch(actualBuilderUnit);
+				watch(actualBuilderUnit);
 			}
 		}
 
 		System.out.println(landingZone);
 		System.out.println();
 		System.out.println(shuttleExitPosResponse.getResult());
-
 	}
 
 	private List<WsCoordinate> determineUnitZeroRadarCells(WsCoordinate builderUnitPosition,
