@@ -74,7 +74,11 @@ public class GameController {
 		while (coordinatesToScan.size() != 0) {
 
 			IsMyTurnResponse waitForMyTurn = waitForMyTurn();
-			if (actualBuilderUnit != 0) {
+			if (actualBuilderUnit == 0) {
+				List<WsCoordinate> determineUnitZeroRadarCells = determineUnitZeroRadarCells(
+						landingZone.getUnitPosition()[actualBuilderUnit], exitDirection);
+				radar(actualBuilderUnit, determineUnitZeroRadarCells);
+			} else {
 				int radarableCells = waitForMyTurn.getResult().getActionPointsLeft() / getActionCost().getRadar();
 				List<WsCoordinate> subList = coordinatesToScan.subList(0,
 						radarableCells > coordinatesToScan.size() ? coordinatesToScan.size() : radarableCells);
@@ -91,6 +95,62 @@ public class GameController {
 
 	}
 
+	private List<WsCoordinate> determineUnitZeroRadarCells(WsCoordinate builderUnitPosition,
+			WsDirection exitDirection) {
+		List<WsCoordinate> coordinates = new ArrayList<>(4);
+
+		int x = builderUnitPosition.getX();
+		int y = builderUnitPosition.getY();
+
+		switch (exitDirection) {
+		case UP:
+			coordinates.add(new WsCoordinate(x + 1, y + 3));
+			coordinates.add(new WsCoordinate(x + 2, y + 3));
+			coordinates.add(new WsCoordinate(x - 1, y + 3));
+			coordinates.add(new WsCoordinate(x - 2, y + 3));
+			break;
+
+		case DOWN:
+			coordinates.add(new WsCoordinate(x + 1, y - 3));
+			coordinates.add(new WsCoordinate(x + 2, y - 3));
+			coordinates.add(new WsCoordinate(x - 1, y - 3));
+			coordinates.add(new WsCoordinate(x - 2, y - 3));
+			break;
+
+		case LEFT:
+			coordinates.add(new WsCoordinate(x - 3, y - 1));
+			coordinates.add(new WsCoordinate(x - 3, y - 2));
+			coordinates.add(new WsCoordinate(x - 3, y + 1));
+			coordinates.add(new WsCoordinate(x - 3, y + 2));
+			break;
+
+		case RIGHT:
+			coordinates.add(new WsCoordinate(x + 3, y - 1));
+			coordinates.add(new WsCoordinate(x + 3, y - 2));
+			coordinates.add(new WsCoordinate(x + 3, y + 1));
+			coordinates.add(new WsCoordinate(x + 3, y + 2));
+			break;
+
+		default:
+			break;
+		}
+
+		removeInvalidCoordinates(coordinates);
+
+		return coordinates;
+	}
+
+	private void removeInvalidCoordinates(List<WsCoordinate> coordinates) {
+		for (int i = 0; i < coordinates.size(); i++) {
+			WsCoordinate wsCoordinate = coordinates.get(i);
+			if (wsCoordinate.getX() < 0 || wsCoordinate.getX() > sizeOfLZ.getX() || wsCoordinate.getY() < 0
+					|| wsCoordinate.getY() > sizeOfLZ.getY()) {
+				coordinates.remove(wsCoordinate);
+				i--;
+			}
+		}
+	}
+
 	private List<WsCoordinate> createRadarZone(WsCoordinate center) {
 		List<WsCoordinate> coordinatesToScan = new ArrayList<WsCoordinate>(49);
 		for (int x = -3; x <= 3; x++) {
@@ -98,14 +158,7 @@ public class GameController {
 				coordinatesToScan.add(new WsCoordinate(x + center.getX(), y + center.getY()));
 			}
 		}
-		for (int i = 0; i < coordinatesToScan.size(); i++) {
-			WsCoordinate wsCoordinate = coordinatesToScan.get(i);
-			if (wsCoordinate.getX() < 0 || wsCoordinate.getX() > sizeOfLZ.getX() || wsCoordinate.getY() < 0
-					|| wsCoordinate.getY() > sizeOfLZ.getY()) {
-				coordinatesToScan.remove(wsCoordinate);
-				i--;
-			}
-		}
+		removeInvalidCoordinates(coordinatesToScan);
 		return coordinatesToScan;
 	}
 
