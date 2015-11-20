@@ -33,14 +33,12 @@ import eu.loxon.centralcontrol.WsDirection;
 public class GameController {
 
 	public static final String TEAM_NAME = "0x70unideb";
+	private static final ObjectFactory objectFactory = new ObjectFactory();
 
-	private static ObjectFactory objectFactory = new ObjectFactory();
 	private CentralControl centralControl;
 	private LandingZone landingZone;
 	private long lastIsMyTurnRequest = 0L;
-
 	private int actualBuilderUnit;
-	private WsCoordinate sizeOfLZ;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
@@ -62,8 +60,8 @@ public class GameController {
 	}
 
 	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
-		WsCoordinate central = determineCentralCoordinates();
-		int centralRadius = determineCentralRadius();
+		WsCoordinate central = landingZone.determineCentralCoordinates();
+		int centralRadius = landingZone.determineCentralRadius();
 
 		int x = coordinate.getX();
 		int y = coordinate.getY();
@@ -80,14 +78,6 @@ public class GameController {
 		} else {
 			return LandingZonePart.BOTTOM_RIGHT;
 		}
-	}
-
-	private int determineCentralRadius() {
-		return (sizeOfLZ.getX() < sizeOfLZ.getY() ? sizeOfLZ.getX() : sizeOfLZ.getY()) / 4;
-	}
-
-	private WsCoordinate determineCentralCoordinates() {
-		return new WsCoordinate(sizeOfLZ.getX() / 2, sizeOfLZ.getY() / 2);
 	}
 
 	private void doFirstSteps() {
@@ -107,7 +97,7 @@ public class GameController {
 		}
 
 		System.out.println(landingZone);
-		StructureTunnelResponse structureTunnelResponse = structureTunnel(actualBuilderUnit, exitDirection);
+		structureTunnel(actualBuilderUnit, exitDirection);
 
 		moveBuilderUnit(actualBuilderUnit, exitDirection);
 
@@ -190,10 +180,12 @@ public class GameController {
 
 	private void removeInvalidCoordinates(List<WsCoordinate> coordinates) {
 		for (int i = 0; i < coordinates.size(); i++) {
-			WsCoordinate wsCoordinate = coordinates.get(i);
-			if (wsCoordinate.getX() < 0 || wsCoordinate.getX() > sizeOfLZ.getX() || wsCoordinate.getY() < 0
-					|| wsCoordinate.getY() > sizeOfLZ.getY()) {
-				coordinates.remove(wsCoordinate);
+			WsCoordinate currentCoordinate = coordinates.get(i);
+			WsCoordinate size = landingZone.getSize();
+
+			if (currentCoordinate.getX() < 0 || currentCoordinate.getX() > size.getX() || currentCoordinate.getY() < 0
+					|| currentCoordinate.getY() > size.getY()) {
+				coordinates.remove(currentCoordinate);
 				i--;
 			}
 		}
@@ -315,7 +307,6 @@ public class GameController {
 		StartGameResponse response = centralControl.startGame(objectFactory.createStartGameRequest());
 		System.out.println(response);
 
-		sizeOfLZ = response.getSize();
 		updateActualBuilderUnit(response.getResult());
 
 		return response;

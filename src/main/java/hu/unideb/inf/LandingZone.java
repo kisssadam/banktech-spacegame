@@ -8,7 +8,6 @@ import eu.loxon.centralcontrol.GetSpaceShuttlePosResponse;
 import eu.loxon.centralcontrol.ObjectType;
 import eu.loxon.centralcontrol.Scouting;
 import eu.loxon.centralcontrol.StartGameResponse;
-import eu.loxon.centralcontrol.WatchResponse;
 import eu.loxon.centralcontrol.WsBuilderunit;
 import eu.loxon.centralcontrol.WsCoordinate;
 
@@ -34,20 +33,24 @@ public class LandingZone {
 		for (int i = 0; i < unitPosition.length; i++) {
 			unitPosition[i] = this.spaceShuttlePos;
 		}
+
 		initLandingZone();
 	}
 
 	private final void initLandingZone() {
 		terrain = new ObjectType[size.getX() + 1][size.getY() + 1];
 		ownerTeam = new String[size.getX() + 1][size.getY() + 1];
+
 		for (int i = 0; i < terrain.length; i++) {
 			Arrays.fill(terrain[i], ObjectType.UNINITIALIZED);
 			Arrays.fill(ownerTeam[i], "");
 		}
+
 		for (int i = 0; i < terrain.length; i++) {
 			terrain[i][0] = ObjectType.OBSIDIAN;
 			terrain[i][size.getY()] = ObjectType.OBSIDIAN;
 		}
+
 		for (int i = 0; i < terrain[0].length; i++) {
 			terrain[0][i] = ObjectType.OBSIDIAN;
 			terrain[size.getX()][i] = ObjectType.OBSIDIAN;
@@ -59,30 +62,35 @@ public class LandingZone {
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
 		terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
 	}
-	
-	public void processScoutings(List<Scouting> scoutings){
+
+	public void processScoutings(List<Scouting> scoutings) {
 		for (Scouting scouting : scoutings) {
 			WsCoordinate wsCoordinate = scouting.getCord();
 			terrain[wsCoordinate.getX()][wsCoordinate.getY()] = scouting.getObject();
 			ownerTeam[wsCoordinate.getX()][wsCoordinate.getY()] = scouting.getTeam();
 		}
 	}
-	public void setTerrain(WsCoordinate coordinate, ObjectType object){
+
+	public void setTerrain(WsCoordinate coordinate, ObjectType object) {
 		System.out.println("Setting terrain on: " + coordinate + " to: " + object);
 		terrain[coordinate.getX()][coordinate.getY()] = object;
 	}
 
 	public void setUnitPosition(int unit, WsCoordinate wsCoordinate) {
-		System.out.println("Setting no. " +unit + " unit position to: " + wsCoordinate);
+		System.out.println("Setting no. " + unit + " unit position to: " + wsCoordinate);
 		this.unitPosition[unit] = wsCoordinate;
+	}
+
+	public int determineCentralRadius() {
+		return (size.getX() < size.getY() ? size.getX() : size.getY()) / 4;
+	}
+
+	public WsCoordinate determineCentralCoordinates() {
+		return new WsCoordinate(size.getX() / 2, size.getY() / 2);
 	}
 
 	public WsCoordinate[] getUnitPosition() {
 		return unitPosition;
-	}
-
-	public void setUnitPosition(WsCoordinate[] unitPosition) {
-		this.unitPosition = unitPosition;
 	}
 
 	public WsCoordinate getSpaceShuttlePos() {
@@ -97,8 +105,8 @@ public class LandingZone {
 		return units;
 	}
 
-	public void setUnits(List<WsBuilderunit> units) {
-		this.units = units;
+	public WsCoordinate getSize() {
+		return size;
 	}
 
 	@Override
