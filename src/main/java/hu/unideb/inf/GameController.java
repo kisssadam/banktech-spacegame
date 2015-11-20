@@ -117,9 +117,9 @@ public class GameController {
 		while (coordinatesToScan.size() != 0) {
 			IsMyTurnResponse waitForMyTurn = waitForMyTurn();
 			if (actualBuilderUnit == 0) {
-				List<WsCoordinate> determineUnitZeroRadarCells = determineUnitZeroRadarCells(
+				List<WsCoordinate> unitZeroRadarCells = determineUnitZeroRadarCells(
 						landingZone.getUnitPosition()[actualBuilderUnit], exitDirection);
-				radar(actualBuilderUnit, determineUnitZeroRadarCells);
+				radar(actualBuilderUnit, unitZeroRadarCells);
 			} else {
 				int radarableCells = waitForMyTurn.getResult().getActionPointsLeft() / getActionCost().getRadar();
 				List<WsCoordinate> subList = coordinatesToScan.subList(0,
