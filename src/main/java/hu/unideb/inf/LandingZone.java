@@ -14,10 +14,10 @@ import eu.loxon.centralcontrol.WsCoordinate;
 public class LandingZone {
 
 	private WsCoordinate size;
-	private WsCoordinate[] unitPosition;
 	private List<WsBuilderunit> units;
 	private WsCoordinate spaceShuttlePos;
 	private WsCoordinate spaceShuttleExitPos;
+	private WsCoordinate[] unitPosition;
 	private ObjectType[][] terrain;
 	private String[][] ownerTeam;
 
@@ -34,10 +34,10 @@ public class LandingZone {
 			unitPosition[i] = this.spaceShuttlePos;
 		}
 
-		initLandingZone();
+		initTerrainAndOwnerArray();
 	}
 
-	private final void initLandingZone() {
+	private final void initTerrainAndOwnerArray() {
 		terrain = new ObjectType[size.getX() + 1][size.getY() + 1];
 		ownerTeam = new String[size.getX() + 1][size.getY() + 1];
 
@@ -113,10 +113,10 @@ public class LandingZone {
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
 
-		for (int j = terrain[0].length - 1; j >= 0; j--) {
-			for (int i = 0; i < terrain.length; i++) {
-				stringBuilder.append(terrain[i][j].firstChar());
-				stringBuilder.append(i + 1 < terrain.length ? " " : System.lineSeparator());
+		for (int y = terrain[0].length - 1; y >= 0; y--) {
+			for (int x = 0; x < terrain.length; x++) {
+				stringBuilder.append(terrain[x][y].firstChar());
+				stringBuilder.append(x + 1 < terrain.length ? " " : System.lineSeparator());
 			}
 		}
 		stringBuilder.append(System.lineSeparator());

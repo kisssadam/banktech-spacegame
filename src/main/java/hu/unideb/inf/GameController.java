@@ -1,6 +1,7 @@
 package hu.unideb.inf;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import eu.loxon.centralcontrol.ActionCostResponse;
@@ -33,15 +34,22 @@ import eu.loxon.centralcontrol.WsDirection;
 public class GameController {
 
 	public static final String TEAM_NAME = "0x70unideb";
+
 	private static final ObjectFactory objectFactory = new ObjectFactory();
 
 	private CentralControl centralControl;
 	private LandingZone landingZone;
-	private long lastIsMyTurnRequest = 0L;
+	private long lastIsMyTurnRequest;
 	private int actualBuilderUnit;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
+
+		StartGameResponse startGameResponse = startGame();
+		GetSpaceShuttlePosResponse shuttlePosResponse = getSpaceShuttlePos();
+		GetSpaceShuttleExitPosResponse shuttleExitPosResponse = getSpaceShuttleExitPos();
+
+		this.landingZone = new LandingZone(startGameResponse, shuttlePosResponse, shuttleExitPosResponse);
 	}
 
 	public void playGame() throws InterruptedException {
@@ -81,11 +89,6 @@ public class GameController {
 	}
 
 	private void doFirstSteps() {
-		StartGameResponse startGameResponse = startGame();
-		GetSpaceShuttlePosResponse shuttlePosResponse = getSpaceShuttlePos();
-		GetSpaceShuttleExitPosResponse shuttleExitPosResponse = getSpaceShuttleExitPos();
-		this.landingZone = new LandingZone(startGameResponse, shuttlePosResponse, shuttleExitPosResponse);
-
 		WsCoordinate spaceShuttlePos = landingZone.getSpaceShuttlePos();
 		WsCoordinate spaceShuttleExitPos = landingZone.getSpaceShuttleExitPos();
 		WsDirection exitDirection = determineExitDirection(spaceShuttlePos, spaceShuttleExitPos);
@@ -106,7 +109,7 @@ public class GameController {
 			coordinatesToRemove.add(scouting.getCord());
 		}
 
-		WsCoordinate shuttlePos = shuttlePosResponse.getCord();
+		WsCoordinate shuttlePos = landingZone.getSpaceShuttlePos();
 		List<WsCoordinate> coordinatesToScan = createRadarZone(shuttlePos);
 
 		coordinatesToScan.removeAll(coordinatesToRemove);
@@ -129,8 +132,6 @@ public class GameController {
 		}
 
 		System.out.println(landingZone);
-		System.out.println();
-		System.out.println(shuttleExitPosResponse.getResult());
 	}
 
 	private List<WsCoordinate> determineUnitZeroRadarCells(WsCoordinate builderUnitPosition,
@@ -168,9 +169,6 @@ public class GameController {
 			coordinates.add(new WsCoordinate(x + 3, y + 1));
 			coordinates.add(new WsCoordinate(x + 3, y + 2));
 			break;
-
-		default:
-			break;
 		}
 
 		removeInvalidCoordinates(coordinates);
@@ -179,26 +177,38 @@ public class GameController {
 	}
 
 	private void removeInvalidCoordinates(List<WsCoordinate> coordinates) {
-		for (int i = 0; i < coordinates.size(); i++) {
-			WsCoordinate currentCoordinate = coordinates.get(i);
-			WsCoordinate size = landingZone.getSize();
+		for (Iterator<WsCoordinate> iterator = coordinates.iterator(); iterator.hasNext();) {
+			WsCoordinate wsCoordinate = (WsCoordinate) iterator.next();
 
-			if (currentCoordinate.getX() < 0 || currentCoordinate.getX() > size.getX() || currentCoordinate.getY() < 0
-					|| currentCoordinate.getY() > size.getY()) {
-				coordinates.remove(currentCoordinate);
-				i--;
+			if (!isCoordinateValid(wsCoordinate)) {
+				iterator.remove();
 			}
 		}
 	}
 
+	private boolean isCoordinateValid(WsCoordinate wsCoordinate) {
+		WsCoordinate size = landingZone.getSize();
+
+		boolean isXCoordinateValid = isCoordinateBetweenBounds(wsCoordinate.getX(), 0, size.getX());
+		boolean isYCoordinateValid = isCoordinateBetweenBounds(wsCoordinate.getY(), 0, size.getY());
+
+		return isXCoordinateValid && isYCoordinateValid;
+	}
+
+	private boolean isCoordinateBetweenBounds(int coordinate, int lowerInclusiveBound, int upperInclusiveBound) {
+		return coordinate >= lowerInclusiveBound && coordinate <= upperInclusiveBound;
+	}
+
 	private List<WsCoordinate> createRadarZone(WsCoordinate center) {
 		List<WsCoordinate> coordinatesToScan = new ArrayList<WsCoordinate>(49);
+
 		for (int x = -3; x <= 3; x++) {
 			for (int y = -3; y <= 3; y++) {
 				coordinatesToScan.add(new WsCoordinate(x + center.getX(), y + center.getY()));
 			}
 		}
 		removeInvalidCoordinates(coordinatesToScan);
+
 		return coordinatesToScan;
 	}
 
@@ -329,6 +339,7 @@ public class GameController {
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
+
 		return response;
 	}
 
@@ -342,6 +353,7 @@ public class GameController {
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
+
 		return response;
 	}
 
@@ -387,7 +399,7 @@ public class GameController {
 
 		do {
 			Thread.sleep(50);
-		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 300);
+		} while ((System.currentTimeMillis() - this.lastIsMyTurnRequest) < 310);
 
 		boolean isMyTurn = false;
 		do {
