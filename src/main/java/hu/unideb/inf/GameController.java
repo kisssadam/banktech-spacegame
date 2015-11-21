@@ -42,6 +42,7 @@ public class GameController {
 	private long lastIsMyTurnRequest;
 	private int actualBuilderUnit;
 	private WsDirection[] lastDirections;
+	private CommonResp lastCommonResp;
 
 	public GameController() {
 		super();
@@ -173,43 +174,54 @@ public class GameController {
 			waitForMyTurn();
 		}
 
-		moveBuilderUnit(actualBuilderUnit, exitDirection);
-
-		System.out.println(landingZone);
+		// moveBuilderUnit(actualBuilderUnit, exitDirection);
 
 		WsCoordinate bestCoordinate = getBestCoordinate();
 		doNextStep(bestCoordinate);
-		
+
 		bestCoordinate = getBestCoordinate();
 		doNextStep(bestCoordinate);
-		
-		waitForMyTurn();
-		while (actualBuilderUnit == 1) {
+
+		bestCoordinate = getBestCoordinate();
+		doNextStep(bestCoordinate);
+
+		System.out.println(landingZone);
+		for (int i = 1; i < 3; i++) {
 			waitForMyTurn();
+			while (actualBuilderUnit == i) {
+				waitForMyTurn();
+			}
+
+			bestCoordinate = getBestCoordinate();
+			doNextStep(bestCoordinate);
+
+			bestCoordinate = getBestCoordinate();
+			doNextStep(bestCoordinate);
+
+			System.out.println(landingZone);
 		}
-		System.out.println(landingZone);
-		
-		bestCoordinate = getBestCoordinate();
-		doNextStep(bestCoordinate);
-		
-		bestCoordinate = getBestCoordinate();
-		doNextStep(bestCoordinate);
-		
-		waitForMyTurn();
-		while (actualBuilderUnit == 2) {
-			waitForMyTurn();
+		while (lastCommonResp.getTurnsLeft() > 0) {
+			for (int i = 0; i < 3; i++) {
+				waitForMyTurn();
+				while (actualBuilderUnit == i) {
+					waitForMyTurn();
+				}
+
+				while (lastCommonResp.getActionPointsLeft() > 0) {
+					bestCoordinate = getBestCoordinate();
+					int actionCost = 0;
+					if (actionCost <= lastCommonResp.getActionPointsLeft()) {
+						doNextStep(bestCoordinate);
+					} else {
+						// TODO valami hülyeség ha kevés pontunk van, de azé még
+						// van valamennyi :D
+						lastCommonResp.setActionPointsLeft(0);
+					}
+				}
+				System.out.println(landingZone);
+			}
+
 		}
-		System.out.println(landingZone);
-		
-		bestCoordinate = getBestCoordinate();
-		doNextStep(bestCoordinate);
-		
-		
-		bestCoordinate = getBestCoordinate();
-		doNextStep(bestCoordinate);
-		
-		
-		System.out.println(landingZone);
 
 		// WatchResponse watchResponse = watch(this.actualBuilderUnit);
 		// List<WsCoordinate> coordinatesToRemove = new
@@ -257,12 +269,13 @@ public class GameController {
 
 	private void doNextStep(WsCoordinate coordinate) {
 		ObjectType objectType = landingZone.getTerrainOfCell(coordinate);
-		
+
 		WsCoordinate actualUnitPosition = landingZone.getUnitPosition(actualBuilderUnit);
 		WsDirection direction = calculateDirection(actualUnitPosition, coordinate);
-		
+
 		switch (objectType) {
 		case TUNNEL:
+			System.out.println("CSAPAT: *" + TEAM_NAME + "* *" + landingZone.getTeamOfCell(coordinate) + "*");
 			if (TEAM_NAME.equals(landingZone.getTeamOfCell(coordinate))) {
 				moveBuilderUnit(actualBuilderUnit, direction);
 			} else {
@@ -287,8 +300,12 @@ public class GameController {
 	// TODO mi van ha mindegyik Integer.MAX_VALUE ? Ekkor is visszakuld egy
 	// koordinatat. Ezt kezelni kell.
 	private WsCoordinate getBestCoordinate() {
+		if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttlePos())) {
+			return landingZone.getSpaceShuttleExitPos();
+		}
+
 		List<Scouting> scoutings = watch(actualBuilderUnit).getScout();
-		
+
 		int[] points = new int[4];
 
 		for (int i = 0; i < scoutings.size(); i++) {
@@ -299,7 +316,7 @@ public class GameController {
 				if (TEAM_NAME.equals(scouting.getTeam())) {
 					WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
 							scouting.getCord());
-					if (lastDirections[actualBuilderUnit] != direction) {
+					if (lastDirections[actualBuilderUnit].opposite() != direction) {
 						points[i] = 1;
 					} else {
 						points[i] = 5;
@@ -432,6 +449,7 @@ public class GameController {
 		watchRequest.setUnit(unit);
 
 		WatchResponse response = centralControl.watch(watchRequest);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -447,6 +465,7 @@ public class GameController {
 		radarRequest.getCord().addAll(wsCoordinates);
 
 		RadarResponse response = centralControl.radar(radarRequest);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -462,6 +481,7 @@ public class GameController {
 		moveBuilderUnitRequest.setDirection(wsDirection);
 
 		MoveBuilderUnitResponse response = centralControl.moveBuilderUnit(moveBuilderUnitRequest);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		if (response.getResult().getType().equals(ResultType.DONE)) {
@@ -503,6 +523,7 @@ public class GameController {
 
 	private StartGameResponse startGame() {
 		StartGameResponse response = centralControl.startGame(objectFactory.createStartGameRequest());
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -514,6 +535,7 @@ public class GameController {
 		GetSpaceShuttlePosRequest request = objectFactory.createGetSpaceShuttlePosRequest();
 
 		GetSpaceShuttlePosResponse response = centralControl.getSpaceShuttlePos(request);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -524,6 +546,7 @@ public class GameController {
 		GetSpaceShuttleExitPosRequest request = objectFactory.createGetSpaceShuttleExitPosRequest();
 
 		GetSpaceShuttleExitPosResponse response = centralControl.getSpaceShuttleExitPos(request);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -538,6 +561,7 @@ public class GameController {
 		explodeCellRequest.setDirection(wsDirection);
 
 		ExplodeCellResponse response = centralControl.explodeCell(explodeCellRequest);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -547,6 +571,7 @@ public class GameController {
 
 	private ActionCostResponse getActionCost() {
 		ActionCostResponse response = centralControl.getActionCost(objectFactory.createActionCostRequest());
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		updateActualBuilderUnit(response.getResult());
@@ -562,6 +587,7 @@ public class GameController {
 		System.out.println(structureTunnelRequest);
 
 		StructureTunnelResponse response = centralControl.structureTunnel(structureTunnelRequest);
+		lastCommonResp = response.getResult();
 		System.out.println(response);
 
 		if (ResultType.DONE.equals(response.getResult().getType())) {
@@ -596,6 +622,7 @@ public class GameController {
 			IsMyTurnRequest isMyTurnRequest = new IsMyTurnRequest();
 			response = centralControl.isMyTurn(isMyTurnRequest);
 			this.lastIsMyTurnRequest = System.currentTimeMillis();
+			lastCommonResp = response.getResult();
 			System.out.println(response);
 
 			updateActualBuilderUnit(response.getResult());
