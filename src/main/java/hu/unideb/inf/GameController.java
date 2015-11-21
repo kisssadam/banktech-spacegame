@@ -43,6 +43,10 @@ public class GameController {
 	private int actualBuilderUnit;
 	private WsDirection[] lastDirections;
 
+	public GameController() {
+		super();
+	}
+
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
 
@@ -57,54 +61,17 @@ public class GameController {
 	public void playGame() throws InterruptedException {
 		doFirstSteps();
 
-		IsMyTurnResponse isMyTurnResponse = waitForMyTurn();
-		while (isMyTurnResponse.getResult().getTurnsLeft() > 0) {
-			doNextStep(isMyTurnResponse);
-		}
-	}
-
-	// TODO implement this!
-	private void doNextStep(IsMyTurnResponse isMyTurnResponse) {
-		// List<WsCoordinate> createRadarZone =
-		// createRadarZone(landingZone.getUnitPosition(this.actualBuilderUnit));
-		// LandingZonePart landingZonePart =
-		// determineLandingZonePart(landingZone.getSpaceShuttlePos());
-		// watch(this.actualBuilderUnit);
-		WsCoordinate start = landingZone.getUnitPosition(this.actualBuilderUnit);
-		WsDirection bestDirection = determineBestDirection(start);
-		WsCoordinate cell = calculateWsCoordinate(start, bestDirection);
-
-		switch (landingZone.getTerrainOfCell(cell)) {
-		case TUNNEL:
-			if (TEAM_NAME.equals(landingZone.getTeamOfCell(cell))) {
-				if (lastDirections[actualBuilderUnit] != null) {
-					if (!bestDirection.isOppositeOf(lastDirections[actualBuilderUnit])) {
-						moveBuilderUnit(this.actualBuilderUnit, bestDirection);
-					}
-				}else{
-					moveBuilderUnit(this.actualBuilderUnit, bestDirection);
-				}
-			} else {
-				explodeCell(actualBuilderUnit, bestDirection);
-			}
-			break;
-		case ROCK:
-			structureTunnel(actualBuilderUnit, bestDirection);
-			break;
-		case GRANITE:
-			explodeCell(actualBuilderUnit, bestDirection);
-			break;
-		default:
-			break;
-		}
-
+		// IsMyTurnResponse isMyTurnResponse = waitForMyTurn();
+		// while (isMyTurnResponse.getResult().getTurnsLeft() > 0) {
+		// doNextStep(isMyTurnResponse);
+		// }
 	}
 
 	private WsDirection determineBestDirection(WsCoordinate unitPos) {
-		if(unitPos.equals(landingZone.getSpaceShuttlePos())){
+		if (unitPos.equals(landingZone.getSpaceShuttlePos())) {
 			return calculateDirection(landingZone.getSpaceShuttlePos(), landingZone.getSpaceShuttleExitPos());
 		}
-		
+
 		WatchResponse watchResponse = watch(this.actualBuilderUnit);
 		List<Scouting> scoutings = watchResponse.getScout();
 		ActionCostResponse costResponse = getActionCost();
@@ -122,6 +89,7 @@ public class GameController {
 
 	private int rateCell(Scouting scouting, ActionCostResponse costResponse) {
 		int points = 0;
+
 		switch (scouting.getObject()) {
 		case TUNNEL:
 			if (TEAM_NAME.equals(scouting.getTeam())) {
@@ -130,21 +98,27 @@ public class GameController {
 				points = costResponse.getExplode();
 			}
 			break;
+
 		case SHUTTLE:
 			points = Integer.MAX_VALUE;
 			break;
+
 		case BUILDER_UNIT:
 			points = Integer.MAX_VALUE;
 			break;
+
 		case ROCK:
 			points = costResponse.getDrill();
 			break;
+
 		case GRANITE:
-			points = costResponse.getExplode() + costResponse.getDrill();
+			points = costResponse.getExplode();
 			break;
+
 		case OBSIDIAN:
 			points = Integer.MAX_VALUE;
 			break;
+
 		case UNINITIALIZED:
 			break;
 		}
@@ -152,71 +126,177 @@ public class GameController {
 		return points;
 	}
 
-	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
-		WsCoordinate central = landingZone.determineCentralCoordinates();
-		int centralRadius = landingZone.determineCentralRadius();
-
-		int x = coordinate.getX();
-		int y = coordinate.getY();
-
-		if (x > central.getX() - centralRadius && x < central.getX() + centralRadius
-				&& y > central.getY() - centralRadius && y < central.getY() + centralRadius) {
-			return LandingZonePart.CENTER;
-		} else if (x <= central.getX() && y >= central.getY()) {
-			return LandingZonePart.TOP_LEFT;
-		} else if (x > central.getX() && y >= central.getY()) {
-			return LandingZonePart.TOP_RIGHT;
-		} else if (x <= central.getX() && y < central.getY()) {
-			return LandingZonePart.BOTTOM_LEFT;
-		} else {
-			return LandingZonePart.BOTTOM_RIGHT;
-		}
-	}
+	// private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
+	// WsCoordinate central = landingZone.determineCentralCoordinates();
+	// int centralRadius = landingZone.determineCentralRadius();
+	//
+	// int x = coordinate.getX();
+	// int y = coordinate.getY();
+	//
+	// if (x > central.getX() - centralRadius && x < central.getX() + centralRadius
+	// && y > central.getY() - centralRadius && y < central.getY() + centralRadius) {
+	// return LandingZonePart.CENTER;
+	// } else if (x <= central.getX() && y >= central.getY()) {
+	// return LandingZonePart.TOP_LEFT;
+	// } else if (x > central.getX() && y >= central.getY()) {
+	// return LandingZonePart.TOP_RIGHT;
+	// } else if (x <= central.getX() && y < central.getY()) {
+	// return LandingZonePart.BOTTOM_LEFT;
+	// } else {
+	// return LandingZonePart.BOTTOM_RIGHT;
+	// }
+	// }
 
 	private void doFirstSteps() {
 		WsCoordinate spaceShuttlePos = landingZone.getSpaceShuttlePos();
 		WsCoordinate spaceShuttleExitPos = landingZone.getSpaceShuttleExitPos();
 		WsDirection exitDirection = calculateDirection(spaceShuttlePos, spaceShuttleExitPos);
 
-		WatchResponse watchResponse = watch(this.actualBuilderUnit);
-		List<WsCoordinate> coordinatesToRemove = new ArrayList<WsCoordinate>(8);
-		for (Scouting scouting : watchResponse.getScout()) {
-			coordinatesToRemove.add(scouting.getCord());
-		}
+		System.out.println(landingZone);
+
+		waitForMyTurn();
+		watch(actualBuilderUnit);
+		structureTunnel(actualBuilderUnit, exitDirection);
 
 		System.out.println(landingZone);
-		structureTunnel(this.actualBuilderUnit, exitDirection);
 
-		moveBuilderUnit(this.actualBuilderUnit, exitDirection);
+		List<WsCoordinate> coordinatesToRadar = determineUnitZeroRadarCells(
+				landingZone.getUnitPosition(actualBuilderUnit), exitDirection);
+		radar(actualBuilderUnit, coordinatesToRadar);
 
-		watchResponse = watch(this.actualBuilderUnit);
-		for (Scouting scouting : watchResponse.getScout()) {
-			coordinatesToRemove.add(scouting.getCord());
+		System.out.println(landingZone);
+
+		waitForMyTurn();
+		while (actualBuilderUnit == 0) {
+			waitForMyTurn();
 		}
 
-		WsCoordinate shuttlePos = landingZone.getSpaceShuttlePos();
-		List<WsCoordinate> coordinatesToScan = createRadarZone(shuttlePos);
+		moveBuilderUnit(actualBuilderUnit, exitDirection);
 
-		coordinatesToScan.removeAll(coordinatesToRemove);
+		System.out.println(landingZone);
 
-		while (coordinatesToScan.size() != 0) {
-			IsMyTurnResponse waitForMyTurn = waitForMyTurn();
-			if (this.actualBuilderUnit == 0) {
-				List<WsCoordinate> unitZeroRadarCells = determineUnitZeroRadarCells(
-						landingZone.getUnitPosition(this.actualBuilderUnit), exitDirection);
-				radar(this.actualBuilderUnit, unitZeroRadarCells);
+		List<Scouting> scoutings = watch(actualBuilderUnit).getScout();
+		WsCoordinate bestCoordinate = getBestCoordinate(scoutings);
+		doNextStep(bestCoordinate);
+
+		System.out.println(landingZone);
+
+		//
+
+		// WatchResponse watchResponse = watch(this.actualBuilderUnit);
+		// List<WsCoordinate> coordinatesToRemove = new ArrayList<WsCoordinate>(8);
+		// for (Scouting scouting : watchResponse.getScout()) {
+		// coordinatesToRemove.add(scouting.getCord());
+		// }
+		//
+		// System.out.println(landingZone);
+		// structureTunnel(this.actualBuilderUnit, exitDirection);
+		//
+		// moveBuilderUnit(this.actualBuilderUnit, exitDirection);
+		//
+		// watchResponse = watch(this.actualBuilderUnit);
+		// for (Scouting scouting : watchResponse.getScout()) {
+		// coordinatesToRemove.add(scouting.getCord());
+		// }
+		//
+		// WsCoordinate shuttlePos = landingZone.getSpaceShuttlePos();
+		// List<WsCoordinate> coordinatesToScan = createRadarZone(shuttlePos);
+		//
+		// coordinatesToScan.removeAll(coordinatesToRemove);
+		//
+		// while (coordinatesToScan.size() != 0) {
+		// IsMyTurnResponse waitForMyTurn = waitForMyTurn();
+		// if (this.actualBuilderUnit == 0) {
+		// List<WsCoordinate> unitZeroRadarCells = determineUnitZeroRadarCells(
+		// landingZone.getUnitPosition(this.actualBuilderUnit), exitDirection);
+		// radar(this.actualBuilderUnit, unitZeroRadarCells);
+		// } else {
+		// int radarableCells = waitForMyTurn.getResult().getActionPointsLeft() / getActionCost().getRadar();
+		// List<WsCoordinate> subList = coordinatesToScan.subList(0,
+		// radarableCells > coordinatesToScan.size() ? coordinatesToScan.size() : radarableCells);
+		// radar(this.actualBuilderUnit, subList);
+		// coordinatesToScan.removeAll(subList);
+		//
+		// // watch(actualBuilderUnit);
+		// }
+		// }
+		//
+		// System.out.println(landingZone);
+	}
+
+	private void doNextStep(WsCoordinate coordinate) {
+		ObjectType objectType = landingZone.getTerrainOfCell(coordinate);
+
+		WsCoordinate actualUnitPosition = landingZone.getUnitPosition(actualBuilderUnit);
+		WsDirection direction = calculateDirection(actualUnitPosition, coordinate);
+
+		switch (objectType) {
+		case TUNNEL:
+			if (TEAM_NAME.equals(landingZone.getTeamOfCell(coordinate))) {
+				moveBuilderUnit(actualBuilderUnit, direction);
 			} else {
-				int radarableCells = waitForMyTurn.getResult().getActionPointsLeft() / getActionCost().getRadar();
-				List<WsCoordinate> subList = coordinatesToScan.subList(0,
-						radarableCells > coordinatesToScan.size() ? coordinatesToScan.size() : radarableCells);
-				radar(this.actualBuilderUnit, subList);
-				coordinatesToScan.removeAll(subList);
+				explodeCell(actualBuilderUnit, direction);
+			}
+			break;
 
-				// watch(actualBuilderUnit);
+		case GRANITE:
+			explodeCell(actualBuilderUnit, direction);
+			break;
+
+		case ROCK:
+			structureTunnel(actualBuilderUnit, direction);
+			break;
+
+		default:
+			System.out.println("Should not happen!");
+			break;
+		}
+	}
+
+	// TODO mi van ha mindegyik Integer.MAX_VALUE ? Ekkor is visszakuld egy koordinatat. Ezt kezelni kell.
+	private WsCoordinate getBestCoordinate(List<Scouting> scoutings) {
+		int[] points = new int[4];
+
+		for (int i = 0; i < scoutings.size(); i++) {
+			Scouting scouting = scoutings.get(i);
+
+			switch (scouting.getObject()) {
+			case TUNNEL:
+				if (TEAM_NAME.equals(scouting.getTeam())) {
+					WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
+							scouting.getCord());
+					if (lastDirections[actualBuilderUnit] != direction) {
+						points[i] = 1;
+					} else {
+						points[i] = 5;
+					}
+				} else {
+					points[i] = 4;
+				}
+				break;
+
+			case GRANITE:
+				points[i] = 3;
+				break;
+
+			case ROCK:
+				points[i] = 2;
+				break;
+
+			default:
+				points[i] = Integer.MAX_VALUE;
+				break;
 			}
 		}
 
-		System.out.println(landingZone);
+		int minIndex = 0;
+		for (int i = 0; i < points.length; i++) {
+			if (points[i] < points[minIndex]) {
+				minIndex = i;
+			}
+		}
+
+		return scoutings.get(minIndex).getCord();
 	}
 
 	private List<WsCoordinate> determineUnitZeroRadarCells(WsCoordinate builderUnitPosition,
@@ -228,31 +308,47 @@ public class GameController {
 
 		switch (exitDirection) {
 		case UP:
-			coordinates.add(new WsCoordinate(x + 1, y + 3));
-			coordinates.add(new WsCoordinate(x + 2, y + 3));
-			coordinates.add(new WsCoordinate(x - 1, y + 3));
-			coordinates.add(new WsCoordinate(x - 2, y + 3));
+			coordinates.add(new WsCoordinate(x - 1, y + 1));
+			coordinates.add(new WsCoordinate(x - 2, y + 1));
+
+			coordinates.add(new WsCoordinate(x + 1, y + 1));
+			coordinates.add(new WsCoordinate(x + 2, y + 1));
+
+			coordinates.add(new WsCoordinate(x, y + 2));
+			coordinates.add(new WsCoordinate(x, y + 3));
 			break;
 
 		case DOWN:
-			coordinates.add(new WsCoordinate(x + 1, y - 3));
-			coordinates.add(new WsCoordinate(x + 2, y - 3));
-			coordinates.add(new WsCoordinate(x - 1, y - 3));
-			coordinates.add(new WsCoordinate(x - 2, y - 3));
+			coordinates.add(new WsCoordinate(x - 1, y - 1));
+			coordinates.add(new WsCoordinate(x - 2, y - 1));
+
+			coordinates.add(new WsCoordinate(x + 1, y - 1));
+			coordinates.add(new WsCoordinate(x + 2, y - 1));
+
+			coordinates.add(new WsCoordinate(x, y - 2));
+			coordinates.add(new WsCoordinate(x, y - 3));
 			break;
 
 		case LEFT:
-			coordinates.add(new WsCoordinate(x - 3, y - 1));
-			coordinates.add(new WsCoordinate(x - 3, y - 2));
-			coordinates.add(new WsCoordinate(x - 3, y + 1));
-			coordinates.add(new WsCoordinate(x - 3, y + 2));
+			coordinates.add(new WsCoordinate(x - 1, y + 1));
+			coordinates.add(new WsCoordinate(x - 1, y + 2));
+
+			coordinates.add(new WsCoordinate(x - 1, y - 1));
+			coordinates.add(new WsCoordinate(x - 1, y - 2));
+
+			coordinates.add(new WsCoordinate(x - 2, y));
+			coordinates.add(new WsCoordinate(x - 3, y));
 			break;
 
 		case RIGHT:
-			coordinates.add(new WsCoordinate(x + 3, y - 1));
-			coordinates.add(new WsCoordinate(x + 3, y - 2));
-			coordinates.add(new WsCoordinate(x + 3, y + 1));
-			coordinates.add(new WsCoordinate(x + 3, y + 2));
+			coordinates.add(new WsCoordinate(x + 1, y + 1));
+			coordinates.add(new WsCoordinate(x + 1, y + 2));
+
+			coordinates.add(new WsCoordinate(x + 1, y - 1));
+			coordinates.add(new WsCoordinate(x + 1, y - 2));
+
+			coordinates.add(new WsCoordinate(x + 2, y));
+			coordinates.add(new WsCoordinate(x + 3, y));
 			break;
 		}
 
@@ -476,7 +572,7 @@ public class GameController {
 		return response;
 	}
 
-	private WsDirection calculateDirection(WsCoordinate startPos, WsCoordinate destinationPos) {
+	public static WsDirection calculateDirection(WsCoordinate startPos, WsCoordinate destinationPos) {
 		int diffX = destinationPos.getX() - startPos.getX();
 		int diffY = destinationPos.getY() - startPos.getY();
 
