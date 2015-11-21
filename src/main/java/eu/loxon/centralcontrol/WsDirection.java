@@ -8,7 +8,8 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for wsDirection.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * The following schema fragment specifies the expected content contained within
+ * this class.
  * <p>
  * 
  * <pre>
@@ -31,6 +32,25 @@ public enum WsDirection {
 
 	public String value() {
 		return name();
+	}
+
+	public WsDirection opposite() {
+		switch (this) {
+		case RIGHT:
+			return LEFT;
+		case DOWN:
+			return UP;
+		case LEFT:
+			return RIGHT;
+		case UP:
+			return DOWN;
+		default:
+			return null;
+		}
+	}
+
+	public boolean isOppositeOf(WsDirection direction) {
+		return this.opposite().equals(direction);
 	}
 
 	public static WsDirection fromValue(String v) {
