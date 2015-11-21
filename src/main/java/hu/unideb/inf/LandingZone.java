@@ -70,7 +70,7 @@ public class LandingZone {
 			ownerTeam[wsCoordinate.getX()][wsCoordinate.getY()] = scouting.getTeam();
 		}
 	}
-
+	
 	public void setTerrain(WsCoordinate coordinate, ObjectType object) {
 		System.out.println("Setting terrain on: " + coordinate + " to: " + object);
 		terrain[coordinate.getX()][coordinate.getY()] = object;
@@ -89,8 +89,8 @@ public class LandingZone {
 		return new WsCoordinate(size.getX() / 2, size.getY() / 2);
 	}
 
-	public WsCoordinate[] getUnitPosition() {
-		return unitPosition;
+	public WsCoordinate getUnitPosition(int actualUnit){
+		return unitPosition[actualUnit];
 	}
 
 	public WsCoordinate getSpaceShuttlePos() {
@@ -108,7 +108,15 @@ public class LandingZone {
 	public WsCoordinate getSize() {
 		return size;
 	}
-
+	
+	public ObjectType getTerrainOfCell(WsCoordinate coordinate){
+		return terrain[coordinate.getX()][coordinate.getY()];
+	}
+	
+	public String getTeamOfCell(WsCoordinate coordinate){
+		return ownerTeam[coordinate.getX()][coordinate.getY()];
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();

@@ -63,8 +63,37 @@ public class GameController {
 
 	// TODO implement this!
 	private void doNextStep(IsMyTurnResponse isMyTurnResponse) {
-		List<WsCoordinate> createRadarZone = createRadarZone(landingZone.getUnitPosition()[this.actualBuilderUnit]);
+		List<WsCoordinate> createRadarZone = createRadarZone(landingZone.getUnitPosition(this.actualBuilderUnit));
 		LandingZonePart landingZonePart = determineLandingZonePart(landingZone.getSpaceShuttlePos());
+		//watch(this.actualBuilderUnit);
+		WsCoordinate start = landingZone.getUnitPosition(this.actualBuilderUnit);
+		WsDirection bestDirection = determineBestDirection(start);
+		WsCoordinate cell = calculateWsCoordinate(start, bestDirection);
+		switch (landingZone.getTerrainOfCell(cell)) {
+		case TUNNEL:
+			if (TEAM_NAME.equals(landingZone.getTeamOfCell(cell))) {
+				moveBuilderUnit(this.actualBuilderUnit, bestDirection);
+			} else {
+				explodeCell(actualBuilderUnit, bestDirection);
+			}
+			break;
+		case ROCK:
+			structureTunnel(actualBuilderUnit, bestDirection);
+			break;
+		case BUILDER_UNIT:
+			break;
+		case GRANITE:
+			break;
+		case OBSIDIAN:
+			break;
+		case SHUTTLE:
+			break;
+		case UNINITIALIZED:
+			break;
+		default:
+			break;
+		}
+		
 	}
 
 	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
@@ -91,20 +120,20 @@ public class GameController {
 	private void doFirstSteps() {
 		WsCoordinate spaceShuttlePos = landingZone.getSpaceShuttlePos();
 		WsCoordinate spaceShuttleExitPos = landingZone.getSpaceShuttleExitPos();
-		WsDirection exitDirection = determineExitDirection(spaceShuttlePos, spaceShuttleExitPos);
+		WsDirection exitDirection = calculateDirection(spaceShuttlePos, spaceShuttleExitPos);
 
-		WatchResponse watchResponse = watch(actualBuilderUnit);
+		WatchResponse watchResponse = watch(this.actualBuilderUnit);
 		List<WsCoordinate> coordinatesToRemove = new ArrayList<WsCoordinate>(8);
 		for (Scouting scouting : watchResponse.getScout()) {
 			coordinatesToRemove.add(scouting.getCord());
 		}
 
 		System.out.println(landingZone);
-		structureTunnel(actualBuilderUnit, exitDirection);
+		structureTunnel(this.actualBuilderUnit, exitDirection);
 
-		moveBuilderUnit(actualBuilderUnit, exitDirection);
+		moveBuilderUnit(this.actualBuilderUnit, exitDirection);
 
-		watchResponse = watch(actualBuilderUnit);
+		watchResponse = watch(this.actualBuilderUnit);
 		for (Scouting scouting : watchResponse.getScout()) {
 			coordinatesToRemove.add(scouting.getCord());
 		}
@@ -116,18 +145,18 @@ public class GameController {
 
 		while (coordinatesToScan.size() != 0) {
 			IsMyTurnResponse waitForMyTurn = waitForMyTurn();
-			if (actualBuilderUnit == 0) {
+			if (this.actualBuilderUnit == 0) {
 				List<WsCoordinate> unitZeroRadarCells = determineUnitZeroRadarCells(
-						landingZone.getUnitPosition()[actualBuilderUnit], exitDirection);
-				radar(actualBuilderUnit, unitZeroRadarCells);
+						landingZone.getUnitPosition(this.actualBuilderUnit), exitDirection);
+				radar(this.actualBuilderUnit, unitZeroRadarCells);
 			} else {
 				int radarableCells = waitForMyTurn.getResult().getActionPointsLeft() / getActionCost().getRadar();
 				List<WsCoordinate> subList = coordinatesToScan.subList(0,
 						radarableCells > coordinatesToScan.size() ? coordinatesToScan.size() : radarableCells);
-				radar(actualBuilderUnit, subList);
+				radar(this.actualBuilderUnit, subList);
 				coordinatesToScan.removeAll(subList);
 
-				watch(actualBuilderUnit);
+				// watch(actualBuilderUnit);
 			}
 		}
 
@@ -212,37 +241,53 @@ public class GameController {
 		return coordinatesToScan;
 	}
 
-	// private int rateCell(Scouting scouting) {
-	// int points = 0;
-	// switch (scouting.getObject()) {
-	// case TUNNEL:
-	// if (!TEAM_NAME.equals(scouting.getTeam())) {
-	// points = explodeCost;
-	// } else {
-	// points = moveCost;
-	// }
-	// break;
-	// case SHUTTLE:
-	// points = Integer.MAX_VALUE;
-	// break;
-	// case BUILDER_UNIT:
-	// points = Integer.MAX_VALUE;
-	// break;
-	// case ROCK:
-	// points = drillCost;
-	// break;
-	// case GRANITE:
-	// points = explodeCost + drillCost;
-	// break;
-	// case OBSIDIAN:
-	// points = Integer.MAX_VALUE;
-	// break;
-	// case UNINITIALIZED:
-	// break;
-	// }
-	//
-	// return points;
-	// }
+	private WsDirection determineBestDirection(WsCoordinate unitPos) {
+		WatchResponse watchResponse = watch(this.actualBuilderUnit);
+		List<Scouting> scoutings = watchResponse.getScout();
+		ActionCostResponse costResponse = getActionCost();
+		int min = Integer.MAX_VALUE, minIndex = 0;
+		for (int i = 0; i < scoutings.size(); i++) {
+			int rating = rateCell(scoutings.get(i), costResponse);
+			if (rating < min) {
+				min = rating;
+				minIndex = i;
+			}
+		}
+
+		return calculateDirection(unitPos, scoutings.get(minIndex).getCord());
+	}
+
+	private int rateCell(Scouting scouting, ActionCostResponse costResponse) {
+		int points = 0;
+		switch (scouting.getObject()) {
+		case TUNNEL:
+			if (TEAM_NAME.equals(scouting.getTeam())) {
+				points = costResponse.getExplode() + costResponse.getDrill() + 1;
+			} else {
+				points = costResponse.getExplode();
+			}
+			break;
+		case SHUTTLE:
+			points = Integer.MAX_VALUE;
+			break;
+		case BUILDER_UNIT:
+			points = Integer.MAX_VALUE;
+			break;
+		case ROCK:
+			points = costResponse.getDrill();
+			break;
+		case GRANITE:
+			points = costResponse.getExplode() + costResponse.getDrill();
+			break;
+		case OBSIDIAN:
+			points = Integer.MAX_VALUE;
+			break;
+		case UNINITIALIZED:
+			break;
+		}
+
+		return points;
+	}
 
 	private WatchResponse watch(int unit) {
 		WatchRequest watchRequest = objectFactory.createWatchRequest();
@@ -266,7 +311,7 @@ public class GameController {
 		RadarResponse response = centralControl.radar(radarRequest);
 		System.out.println(response);
 
-		this.actualBuilderUnit = response.getResult().getBuilderUnit();
+		updateActualBuilderUnit(response.getResult());
 		landingZone.processScoutings(response.getScout());
 
 		return response;
@@ -282,11 +327,11 @@ public class GameController {
 		System.out.println(response);
 
 		if (response.getResult().getType().equals(ResultType.DONE)) {
-			landingZone.setUnitPosition(unit, calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection));
+			landingZone.setUnitPosition(unit, calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection));
 		}
 
-		this.actualBuilderUnit = response.getResult().getBuilderUnit();
-		landingZone.setTerrain(landingZone.getUnitPosition()[unit], ObjectType.BUILDER_UNIT);
+		updateActualBuilderUnit(response.getResult());
+		landingZone.setTerrain(landingZone.getUnitPosition(unit), ObjectType.BUILDER_UNIT);
 
 		return response;
 	}
@@ -310,7 +355,7 @@ public class GameController {
 
 	private void updateActualBuilderUnit(CommonResp result) {
 		this.actualBuilderUnit = result.getBuilderUnit();
-		System.out.println("Actual builder unit: " + actualBuilderUnit);
+		System.out.println("Actual builder unit: " + this.actualBuilderUnit);
 	}
 
 	private StartGameResponse startGame() {
@@ -376,7 +421,7 @@ public class GameController {
 		System.out.println(response);
 
 		if (ResultType.DONE.equals(response.getResult().getType())) {
-			WsCoordinate wsCoordinate = calculateWsCoordinate(landingZone.getUnitPosition()[unit], wsDirection);
+			WsCoordinate wsCoordinate = calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection);
 			landingZone.setTerrain(wsCoordinate, ObjectType.TUNNEL);
 		}
 
@@ -421,9 +466,9 @@ public class GameController {
 		return response;
 	}
 
-	private WsDirection determineExitDirection(WsCoordinate spaceShuttlePos, WsCoordinate spaceShuttleExitPos) {
-		int diffX = spaceShuttleExitPos.getX() - spaceShuttlePos.getX();
-		int diffY = spaceShuttleExitPos.getY() - spaceShuttlePos.getY();
+	private WsDirection calculateDirection(WsCoordinate startPos, WsCoordinate destinationPos) {
+		int diffX = destinationPos.getX() - startPos.getX();
+		int diffY = destinationPos.getY() - startPos.getY();
 
 		if (diffX > 0) {
 			return WsDirection.RIGHT;
