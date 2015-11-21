@@ -49,4 +49,20 @@ public class GameControllerTest {
 		assertEquals(WsDirection.UP, UpDirection);
 	}
 
+	@Test
+	public void testCalculateCoordinate() {
+
+		WsCoordinate upCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.UP);
+		assertEquals(new WsCoordinate(10, 11), upCoordinate);
+
+		WsCoordinate downCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.DOWN);
+		assertEquals(new WsCoordinate(10, 9), downCoordinate);
+
+		WsCoordinate leftCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.LEFT);
+		assertEquals(new WsCoordinate(9, 10), leftCoordinate);
+
+		WsCoordinate rightCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.RIGHT);
+		assertEquals(new WsCoordinate(11, 10), rightCoordinate);
+	}
+
 }

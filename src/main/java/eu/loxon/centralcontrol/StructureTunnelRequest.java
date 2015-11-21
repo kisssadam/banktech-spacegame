@@ -76,4 +76,9 @@ public class StructureTunnelRequest {
 		this.direction = value;
 	}
 
+	@Override
+	public String toString() {
+		return "StructureTunnelRequest [unit=" + unit + ", direction=" + direction + "]";
+	}
+
 }
