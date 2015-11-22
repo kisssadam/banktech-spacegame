@@ -38,39 +38,50 @@ public class LandingZone {
 	}
 
 	private final void initTerrainAndOwnerArray() {
-		terrain = new ObjectType[size.getX() + 1][size.getY() + 1];
-		ownerTeam = new String[size.getX() + 1][size.getY() + 1];
+		this.terrain = new ObjectType[size.getX() + 1][size.getY() + 1];
+		this.ownerTeam = new String[size.getX() + 1][size.getY() + 1];
 
 		for (int i = 0; i < terrain.length; i++) {
-			Arrays.fill(terrain[i], ObjectType.UNINITIALIZED);
-			Arrays.fill(ownerTeam[i], "");
+			Arrays.fill(this.terrain[i], ObjectType.UNINITIALIZED);
+			Arrays.fill(this.ownerTeam[i], "");
 		}
 
 		for (int i = 0; i < terrain.length; i++) {
-			terrain[i][0] = ObjectType.OBSIDIAN;
-			terrain[i][size.getY()] = ObjectType.OBSIDIAN;
+			this.terrain[i][0] = ObjectType.OBSIDIAN;
+			this.terrain[i][size.getY()] = ObjectType.OBSIDIAN;
 		}
 
 		for (int i = 0; i < terrain[0].length; i++) {
-			terrain[0][i] = ObjectType.OBSIDIAN;
-			terrain[size.getX()][i] = ObjectType.OBSIDIAN;
+			this.terrain[0][i] = ObjectType.OBSIDIAN;
+			this.terrain[size.getX()][i] = ObjectType.OBSIDIAN;
 		}
 
-		terrain[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = ObjectType.SHUTTLE;
-		ownerTeam[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = GameController.TEAM_NAME;
+		this.terrain[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = ObjectType.SHUTTLE;
+		this.ownerTeam[spaceShuttlePos.getX()][spaceShuttlePos.getY()] = GameController.TEAM_NAME;
 
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
-		terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
+		this.terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
+	}
+
+	public boolean isThereAnyBuilderUnitOnCoordinate(WsCoordinate wsCoordinate) {
+		for (int i = 0; i < unitPosition.length; i++) {
+			if (unitPosition[i].equals(wsCoordinate)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void processScoutings(List<Scouting> scoutings) {
+		System.out.println("Parsing scoutings: " + scoutings);
+
 		for (Scouting scouting : scoutings) {
 			WsCoordinate wsCoordinate = scouting.getCord();
 			terrain[wsCoordinate.getX()][wsCoordinate.getY()] = scouting.getObject();
 			ownerTeam[wsCoordinate.getX()][wsCoordinate.getY()] = scouting.getTeam();
 		}
 	}
-	
+
 	public void setTerrain(WsCoordinate coordinate, ObjectType object) {
 		System.out.println("Setting terrain on: " + coordinate + " to: " + object);
 		terrain[coordinate.getX()][coordinate.getY()] = object;
@@ -89,7 +100,7 @@ public class LandingZone {
 		return new WsCoordinate(size.getX() / 2, size.getY() / 2);
 	}
 
-	public WsCoordinate getUnitPosition(int actualUnit){
+	public WsCoordinate getUnitPosition(int actualUnit) {
 		return unitPosition[actualUnit];
 	}
 
@@ -108,15 +119,15 @@ public class LandingZone {
 	public WsCoordinate getSize() {
 		return size;
 	}
-	
-	public ObjectType getTerrainOfCell(WsCoordinate coordinate){
+
+	public ObjectType getTerrainOfCell(WsCoordinate coordinate) {
 		return terrain[coordinate.getX()][coordinate.getY()];
 	}
-	
-	public String getTeamOfCell(WsCoordinate coordinate){
+
+	public String getTeamOfCell(WsCoordinate coordinate) {
 		return ownerTeam[coordinate.getX()][coordinate.getY()];
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();

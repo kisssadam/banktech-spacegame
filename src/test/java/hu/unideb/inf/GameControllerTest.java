@@ -51,7 +51,6 @@ public class GameControllerTest {
 
 	@Test
 	public void testCalculateCoordinate() {
-
 		WsCoordinate upCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.UP);
 		assertEquals(new WsCoordinate(10, 11), upCoordinate);
 

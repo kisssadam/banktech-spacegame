@@ -1,5 +1,8 @@
 package eu.loxon.centralcontrol;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
@@ -9,8 +12,7 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for wsCoordinate complex type.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within
- * this class.
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="wsCoordinate">
@@ -76,6 +78,17 @@ public class WsCoordinate {
 		this.y = value;
 	}
 
+	public List<WsCoordinate> getNeightborCoordinates() {
+		List<WsCoordinate> neighbors = new ArrayList<>(4);
+
+		neighbors.add(new WsCoordinate(this.x + 1, y));
+		neighbors.add(new WsCoordinate(this.x - 1, y));
+		neighbors.add(new WsCoordinate(this.x, y + 1));
+		neighbors.add(new WsCoordinate(this.x, y - 1));
+
+		return neighbors;
+	}
+
 	@Override
 	public String toString() {
 		return "WsCoordinate [x=" + x + ", y=" + y + "]";
@@ -105,5 +118,5 @@ public class WsCoordinate {
 			return false;
 		return true;
 	}
-	
+
 }
