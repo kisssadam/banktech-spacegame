@@ -1,8 +1,5 @@
 package eu.loxon.centralcontrol;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
@@ -78,15 +75,27 @@ public class WsCoordinate {
 		this.y = value;
 	}
 
-	public List<WsCoordinate> getNeightborCoordinates() {
-		List<WsCoordinate> neighbors = new ArrayList<>(4);
+	public WsCoordinate[] getNeightborCoordinates() {
+		return new WsCoordinate[] {
+				/*
+				 * LEFT NEIGHBOR
+				 */
+				new WsCoordinate(x - 1, y),
 
-		neighbors.add(new WsCoordinate(x + 1, y));
-		neighbors.add(new WsCoordinate(x - 1, y));
-		neighbors.add(new WsCoordinate(x, y + 1));
-		neighbors.add(new WsCoordinate(x, y - 1));
+				/*
+				 * RIGHT NEIGHBOR
+				 */
+				new WsCoordinate(x + 1, y),
 
-		return neighbors;
+				/*
+				 * UP NEIGHBOR
+				 */
+				new WsCoordinate(x, y + 1),
+
+				/*
+				 * DOWN NEIGHBOR
+				 */
+				new WsCoordinate(x, y - 1) };
 	}
 
 	@Override

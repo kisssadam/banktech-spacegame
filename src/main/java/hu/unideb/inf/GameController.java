@@ -150,10 +150,10 @@ public class GameController {
 		int[] points = new int[4];
 
 		WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
-		List<WsCoordinate> neightborCoordinates = unitPosition.getNeightborCoordinates();
+		WsCoordinate[] neightborCoordinates = unitPosition.getNeightborCoordinates();
 
-		for (int i = 0; i < neightborCoordinates.size(); i++) {
-			WsCoordinate neighbor = neightborCoordinates.get(i);
+		for (int i = 0; i < neightborCoordinates.length; i++) {
+			WsCoordinate neighbor = neightborCoordinates[i];
 			ObjectType objectType = landingZone.getTerrainOfCell(neighbor);
 
 			switch (objectType) {
@@ -201,9 +201,9 @@ public class GameController {
 			}
 		}
 
-		System.out.println("A kiválasztás végeredménye: " + neightborCoordinates.get(minIndex));
+		System.out.println("A kiválasztás végeredménye: " + neightborCoordinates[minIndex]);
 
-		return neightborCoordinates.get(minIndex);
+		return neightborCoordinates[minIndex];
 	}
 
 	private boolean isCoordinateValid(WsCoordinate wsCoordinate) {
