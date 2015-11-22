@@ -86,14 +86,6 @@ public class GameController {
 			} else {
 				WsCoordinate bestCoordinate = getBestCoordinate();
 				doNextStep(bestCoordinate);
-				// if (!landingZone.isThereAnyBuilderUnitOnCoordinate(landingZone.getSpaceShuttleExitPos())) {
-				// if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getMove()) {
-				// moveBuilderUnit(actualBuilderUnit, exitDirection);
-				// }
-				// } else {
-				// System.out.println("BUILDER_UNIT IS ON " + landingZone.getSpaceShuttleExitPos()
-				// + " SO CAN'T STEP TO THE CELL.");
-				// }
 			}
 		} else {
 			WsCoordinate bestCoordinate = getBestCoordinate();
