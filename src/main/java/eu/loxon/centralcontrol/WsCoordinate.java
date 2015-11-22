@@ -1,5 +1,8 @@
 package eu.loxon.centralcontrol;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
@@ -96,6 +99,44 @@ public class WsCoordinate {
 				 * DOWN NEIGHBOR
 				 */
 				new WsCoordinate(x, y - 1) };
+	}
+
+	public WsCoordinate[] getSecondNeightborCoordinates() {
+		return new WsCoordinate[] {
+				/*
+				 * SECOND LEFT NEIGHBOR
+				 */
+				new WsCoordinate(x - 2, y),
+
+				/*
+				 * SECOND RIGHT NEIGHBOR
+				 */
+				new WsCoordinate(x + 2, y),
+
+				/*
+				 * SECOND UP NEIGHBOR
+				 */
+				new WsCoordinate(x, y + 2),
+
+				/*
+				 * SECOND DOWN NEIGHBOR
+				 */
+				new WsCoordinate(x, y - 2) };
+	}
+
+	public List<WsCoordinate> getThirdNeightborCoordinates() {
+		List<WsCoordinate> thirdNeighborCoordinates = new ArrayList<>(4);
+
+		thirdNeighborCoordinates.add(new WsCoordinate(x - 3, y));
+		thirdNeighborCoordinates.add(new WsCoordinate(x + 3, y));
+		thirdNeighborCoordinates.add(new WsCoordinate(x, y - 3));
+		thirdNeighborCoordinates.add(new WsCoordinate(x, y + 3));
+
+		return thirdNeighborCoordinates;
+	}
+
+	public int distanceFrom(WsCoordinate coordinate) {
+		return Math.abs(this.x - coordinate.x) + Math.abs(this.y - coordinate.y);
 	}
 
 	@Override
