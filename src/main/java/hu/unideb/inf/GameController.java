@@ -44,10 +44,7 @@ public class GameController {
 	private CommonResp lastCommonResp;
 	private WsDirection exitDirection;
 	ActionCostResponse actionCostResponse;
-
-	public GameController() {
-		super();
-	}
+	private int totalTurns;
 
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
@@ -64,6 +61,7 @@ public class GameController {
 		this.exitDirection = calculateDirection(spaceShuttlePos, spaceShuttleExitPos);
 
 		this.actionCostResponse = getActionCost();
+		this.totalTurns = startGameResponse.getResult().getTurnsLeft();
 	}
 
 	public void playGame() throws InterruptedException {
@@ -81,19 +79,21 @@ public class GameController {
 
 		watch(actualBuilderUnit);
 		if (actualCoordinate.equals(landingZone.getSpaceShuttlePos())) {
-			if (actualBuilderUnit == 0) {
+			if (actualBuilderUnit == 0 && lastCommonResp.getTurnsLeft() == totalTurns) {
 				if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getDrill()) {
 					structureTunnel(actualBuilderUnit, exitDirection);
 				}
 			} else {
-				if (!landingZone.isThereAnyBuilderUnitOnCoordinate(landingZone.getSpaceShuttleExitPos())) {
-					if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getMove()) {
-						moveBuilderUnit(actualBuilderUnit, exitDirection);
-					}
-				} else {
-					System.out.println("BUILDER_UNIT IS ON " + landingZone.getSpaceShuttleExitPos()
-							+ " SO CAN'T STEP TO THE CELL.");
-				}
+				WsCoordinate bestCoordinate = getBestCoordinate();
+				doNextStep(bestCoordinate);
+				// if (!landingZone.isThereAnyBuilderUnitOnCoordinate(landingZone.getSpaceShuttleExitPos())) {
+				// if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getMove()) {
+				// moveBuilderUnit(actualBuilderUnit, exitDirection);
+				// }
+				// } else {
+				// System.out.println("BUILDER_UNIT IS ON " + landingZone.getSpaceShuttleExitPos()
+				// + " SO CAN'T STEP TO THE CELL.");
+				// }
 			}
 		} else {
 			WsCoordinate bestCoordinate = getBestCoordinate();
@@ -102,8 +102,6 @@ public class GameController {
 	}
 
 	private void doNextStep(WsCoordinate coordinate) {
-		ActionCostResponse actionCostResponse = getActionCost();
-
 		ObjectType objectType = landingZone.getTerrainOfCell(coordinate);
 
 		WsCoordinate actualUnitPosition = landingZone.getUnitPosition(actualBuilderUnit);
@@ -112,19 +110,22 @@ public class GameController {
 		switch (objectType) {
 		case TUNNEL:
 			System.out.println("CSAPAT: *" + TEAM_NAME + "* *" + landingZone.getTeamOfCell(coordinate) + "*");
+
 			if (TEAM_NAME.equals(landingZone.getTeamOfCell(coordinate))) {
 				if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getMove()) {
 					moveBuilderUnit(actualBuilderUnit, direction);
 				}
 			} else {
-				if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getExplode()) {
+				if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getExplode()
+						&& lastCommonResp.getExplosivesLeft() > 0) {
 					explodeCell(actualBuilderUnit, direction);
 				}
 			}
 			break;
 
 		case GRANITE:
-			if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getExplode()) {
+			if (lastCommonResp.getActionPointsLeft() >= actionCostResponse.getExplode()
+					&& lastCommonResp.getExplosivesLeft() > 0) {
 				explodeCell(actualBuilderUnit, direction);
 			}
 			break;
@@ -141,8 +142,8 @@ public class GameController {
 		}
 	}
 
+	// TODO talan a pontozasnal figyelembe kellene venni, hogy van-e ra eleg pontunk.
 	private WsCoordinate getBestCoordinate() {
-		// TODO tuti ide kell? A jelenlegi kod eseten kell ez ide?
 		if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttlePos())) {
 			return landingZone.getSpaceShuttleExitPos();
 		}
@@ -159,11 +160,12 @@ public class GameController {
 			switch (objectType) {
 			case TUNNEL:
 				System.out.println("TUNNEL lett kiválasztva.");
-				if (TEAM_NAME.equals(landingZone.getTeamOfCell(neighbor))) {
+				String teamOfCell = landingZone.getTeamOfCell(neighbor);
+				if (TEAM_NAME.equals(teamOfCell)) {
 					WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
 							neighbor);
 					if (lastDirections[actualBuilderUnit].opposite() != direction) {
-						points[i] = 1;
+						points[i] = 2;
 					} else {
 						points[i] = 5;
 					}
@@ -179,12 +181,7 @@ public class GameController {
 
 			case ROCK:
 				System.out.println("ROCK lett kiválasztva.");
-				points[i] = 2;
-				break;
-
-			case BUILDER_UNIT:
-				System.out.println("BUILDER_UNIT lett kiválasztva.");
-				points[i] = Integer.MAX_VALUE;
+				points[i] = 1;
 				break;
 
 			default:
@@ -300,8 +297,11 @@ public class GameController {
 		System.out.println();
 
 		if (response.getResult().getType().equals(ResultType.DONE)) {
-			landingZone.setUnitPosition(unit, calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection));
+			WsCoordinate coordinate = calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection);
+
+			landingZone.setUnitPosition(unit, coordinate);
 			landingZone.setTerrain(landingZone.getUnitPosition(unit), ObjectType.BUILDER_UNIT);
+			landingZone.setOwnerTeam(coordinate, TEAM_NAME);
 			lastDirections[actualBuilderUnit] = wsDirection;
 		}
 
@@ -426,8 +426,10 @@ public class GameController {
 		System.out.println();
 
 		if (ResultType.DONE.equals(response.getResult().getType())) {
-			WsCoordinate wsCoordinate = calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection);
-			landingZone.setTerrain(wsCoordinate, ObjectType.TUNNEL);
+			WsCoordinate coordinate = calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection);
+
+			landingZone.setTerrain(coordinate, ObjectType.TUNNEL);
+			landingZone.setOwnerTeam(coordinate, TEAM_NAME);
 		}
 
 		updateActualBuilderUnit(response.getResult());

@@ -87,6 +87,10 @@ public class LandingZone {
 		terrain[coordinate.getX()][coordinate.getY()] = object;
 	}
 
+	public void setOwnerTeam(WsCoordinate coordinate, String ownerTeam) {
+		this.ownerTeam[coordinate.getX()][coordinate.getY()] = ownerTeam;
+	}
+
 	public void setUnitPosition(int unit, WsCoordinate wsCoordinate) {
 		System.out.println("Setting no. " + unit + " unit position to: " + wsCoordinate);
 		this.unitPosition[unit] = wsCoordinate;
