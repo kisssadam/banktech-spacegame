@@ -81,10 +81,10 @@ public class WsCoordinate {
 	public List<WsCoordinate> getNeightborCoordinates() {
 		List<WsCoordinate> neighbors = new ArrayList<>(4);
 
-		neighbors.add(new WsCoordinate(this.x + 1, y));
-		neighbors.add(new WsCoordinate(this.x - 1, y));
-		neighbors.add(new WsCoordinate(this.x, y + 1));
-		neighbors.add(new WsCoordinate(this.x, y - 1));
+		neighbors.add(new WsCoordinate(x + 1, y));
+		neighbors.add(new WsCoordinate(x - 1, y));
+		neighbors.add(new WsCoordinate(x, y + 1));
+		neighbors.add(new WsCoordinate(x, y - 1));
 
 		return neighbors;
 	}
