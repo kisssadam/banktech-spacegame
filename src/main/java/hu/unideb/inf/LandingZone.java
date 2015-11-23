@@ -113,12 +113,33 @@ public class LandingZone {
 		this.unitPosition[unit] = wsCoordinate;
 	}
 
-	public int determineCentralRadius() {
-		return (size.getX() < size.getY() ? size.getX() : size.getY()) / 4;
+	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
+		WsCoordinate central = determineCentralCoordinates();
+		int centralRadius = determineCentralRadius();
+
+		int x = coordinate.getX();
+		int y = coordinate.getY();
+
+		if (x > central.getX() - centralRadius && x < central.getX() + centralRadius
+				&& y > central.getY() - centralRadius && y < central.getY() + centralRadius) {
+			return LandingZonePart.CENTER;
+		} else if (x <= central.getX() && y >= central.getY()) {
+			return LandingZonePart.TOP_LEFT;
+		} else if (x > central.getX() && y >= central.getY()) {
+			return LandingZonePart.TOP_RIGHT;
+		} else if (x <= central.getX() && y < central.getY()) {
+			return LandingZonePart.BOTTOM_LEFT;
+		} else {
+			return LandingZonePart.BOTTOM_RIGHT;
+		}
 	}
 
 	public WsCoordinate determineCentralCoordinates() {
 		return new WsCoordinate(size.getX() / 2, size.getY() / 2);
+	}
+
+	public int determineCentralRadius() {
+		return (size.getX() < size.getY() ? size.getX() : size.getY()) / 4;
 	}
 
 	public WsCoordinate getUnitPosition(int actualUnit) {
@@ -171,6 +192,13 @@ public class LandingZone {
 		stringBuilder.append(System.lineSeparator());
 
 		stringBuilder.append("spaceShuttleExitPos: ").append(spaceShuttleExitPos);
+		stringBuilder.append(System.lineSeparator());
+
+		for (int i = 0; i < unitPosition.length; i++) {
+			stringBuilder.append("Builder unit no. " + i + " actual position: " + unitPosition[i] + " landingZonePart: "
+					+ determineLandingZonePart(unitPosition[i]));
+			stringBuilder.append(System.lineSeparator());
+		}
 
 		return stringBuilder.toString();
 	}

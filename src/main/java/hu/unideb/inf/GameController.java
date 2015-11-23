@@ -141,62 +141,100 @@ public class GameController {
 	private WsCoordinate getBestCoordinate() {
 		if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttlePos())) {
 			return landingZone.getSpaceShuttleExitPos();
-		}
+		} else {
+			int[] points = new int[4];
 
-		int[] points = new int[4];
+			WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
+			WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates();
 
-		WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
-		WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates();
+			if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttleExitPos())
+					&& (lastCommonResp.getTurnsLeft() == totalTurns
+							|| lastCommonResp.getTurnsLeft() + 1 == totalTurns)) {
+				for (int i = 0; i < neightborCoordinates.length; i++) {
+					WsCoordinate neighbor = neightborCoordinates[i];
+					ObjectType objectType = landingZone.getTerrainOfCell(neighbor);
 
-		for (int i = 0; i < neightborCoordinates.length; i++) {
-			WsCoordinate neighbor = neightborCoordinates[i];
-			ObjectType objectType = landingZone.getTerrainOfCell(neighbor);
-
-			switch (objectType) {
-			case TUNNEL:
-				System.out.println("TUNNEL lett kiválasztva.");
-				String teamOfCell = landingZone.getTeamOfCell(neighbor);
-				if (TEAM_NAME.equals(teamOfCell)) {
-					if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
-						points[i] = 5;
-					} else {
-						WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
-								neighbor);
-						if (lastDirections[actualBuilderUnit].opposite() != direction) {
-							points[i] = 2;
+					switch (objectType) {
+					case TUNNEL:
+						System.out.println("TUNNEL lett kiválasztva.");
+						String teamOfCell = landingZone.getTeamOfCell(neighbor);
+						if (TEAM_NAME.equals(teamOfCell)) {
+							if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
+								points[i] = 5;
+							} else {
+								points[i] = 1;
+							}
 						} else {
-							points[i] = 5;
+							points[i] = 4;
 						}
+						break;
+
+					case GRANITE:
+						System.out.println("GRANITE lett kiválasztva.");
+						points[i] = 3;
+						break;
+
+					case ROCK:
+						System.out.println("ROCK lett kiválasztva.");
+						points[i] = 2;
+						break;
+
+					default:
+						System.out.println("DEFAULT lett kiválasztva. ObjectType is: " + objectType);
+						points[i] = Integer.MAX_VALUE;
+						break;
 					}
-				} else {
-					points[i] = 4;
 				}
-				break;
+			} else {
+				for (int i = 0; i < neightborCoordinates.length; i++) {
+					WsCoordinate neighbor = neightborCoordinates[i];
+					ObjectType objectType = landingZone.getTerrainOfCell(neighbor);
 
-			case GRANITE:
-				System.out.println("GRANITE lett kiválasztva.");
-				points[i] = 3;
-				break;
+					switch (objectType) {
+					case TUNNEL:
+						System.out.println("TUNNEL lett kiválasztva.");
+						String teamOfCell = landingZone.getTeamOfCell(neighbor);
+						if (TEAM_NAME.equals(teamOfCell)) {
+							if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
+								points[i] = 5;
+							} else {
+								WsDirection direction = calculateDirection(
+										landingZone.getUnitPosition(actualBuilderUnit), neighbor);
+								if (lastDirections[actualBuilderUnit].opposite() != direction) {
+									points[i] = 2;
+								} else {
+									points[i] = 5;
+								}
+							}
+						} else {
+							points[i] = 4;
+						}
+						break;
 
-			case ROCK:
-				System.out.println("ROCK lett kiválasztva.");
-				points[i] = 1;
-				break;
+					case GRANITE:
+						System.out.println("GRANITE lett kiválasztva.");
+						points[i] = 3;
+						break;
 
-			default:
-				System.out.println("DEFAULT lett kiválasztva. ObjectType is: " + objectType);
-				points[i] = Integer.MAX_VALUE;
-				break;
+					case ROCK:
+						System.out.println("ROCK lett kiválasztva.");
+						points[i] = 1;
+						break;
+
+					default:
+						System.out.println("DEFAULT lett kiválasztva. ObjectType is: " + objectType);
+						points[i] = Integer.MAX_VALUE;
+						break;
+					}
+				}
 			}
+			List<Integer> minIndices = getMinIndices(points);
+
+			int minIndex = minIndices.get(0);
+			System.out.println("A kiválasztás végeredménye: " + neightborCoordinates[minIndex]);
+
+			return neightborCoordinates[minIndex];
 		}
-
-		List<Integer> minIndices = getMinIndices(points);
-
-		int minIndex = minIndices.get(0);
-
-		System.out.println("A kiválasztás végeredménye: " + neightborCoordinates[minIndex]);
-
-		return neightborCoordinates[minIndex];
 	}
 
 	public static List<Integer> getMinIndices(int[] points) {
@@ -311,10 +349,14 @@ public class GameController {
 		System.out.println();
 
 		if (response.getResult().getType().equals(ResultType.DONE)) {
-			WsCoordinate coordinate = calculateWsCoordinate(landingZone.getUnitPosition(unit), wsDirection);
+			WsCoordinate actualUnitPosition = landingZone.getUnitPosition(unit);
+			WsCoordinate coordinate = calculateWsCoordinate(actualUnitPosition, wsDirection);
 
+			if (!actualUnitPosition.equals(landingZone.getSpaceShuttlePos())) {
+				landingZone.setTerrain(actualUnitPosition, ObjectType.TUNNEL);
+			}
 			landingZone.setUnitPosition(unit, coordinate);
-			landingZone.setTerrain(landingZone.getUnitPosition(unit), ObjectType.BUILDER_UNIT);
+			landingZone.setTerrain(actualUnitPosition, ObjectType.BUILDER_UNIT);
 			landingZone.setOwnerTeam(coordinate, TEAM_NAME);
 			landingZone.addVisitedCoordinates(actualBuilderUnit, coordinate);
 
