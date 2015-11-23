@@ -24,6 +24,7 @@ public class LandingZone {
 	private String[][] ownerTeam;
 	private Set<WsCoordinate>[] unitAlreadyVisitedCoordinates;
 	private LandingZonePart shuttleLandingZonePart;
+	private int[][][] landingZoneStepCounts;
 
 	@SuppressWarnings("unchecked")
 	public LandingZone(StartGameResponse startGameResponse, GetSpaceShuttlePosResponse getSpaceShuttlePosResponse,
@@ -47,6 +48,19 @@ public class LandingZone {
 		}
 
 		this.shuttleLandingZonePart = determineLandingZonePart(spaceShuttlePos);
+		
+		this.landingZoneStepCounts = new int[4][size.getX() + 1][size.getY() + 1];
+		for (int i = 0; i < this.landingZoneStepCounts.length; i++) {
+			for (int j = 0; j < landingZoneStepCounts[0].length; j++) {
+				this.landingZoneStepCounts[i][j][0] = Integer.MAX_VALUE;
+				this.landingZoneStepCounts[i][j][size.getY()] = Integer.MAX_VALUE;
+			}
+
+			for (int j = 0; j < landingZoneStepCounts[0][0].length; j++) {
+				this.landingZoneStepCounts[i][0][j] = Integer.MAX_VALUE;
+				this.landingZoneStepCounts[i][size.getX()][j] = Integer.MAX_VALUE;
+			}
+		}
 	}
 
 	private final void initTerrainAndOwnerArray() {
@@ -73,6 +87,8 @@ public class LandingZone {
 
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
 		this.terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
+		
+		
 	}
 
 	public void addVisitedCoordinates(int builderUnit, WsCoordinate coordinate) {
@@ -176,7 +192,12 @@ public class LandingZone {
 	public String getTeamOfCell(WsCoordinate coordinate) {
 		return ownerTeam[coordinate.getX()][coordinate.getY()];
 	}
-
+	public int getLandingZoneStepCount(int builderUnit, WsCoordinate coordinate){
+		return landingZoneStepCounts[builderUnit][coordinate.getX()][coordinate.getY()];
+	}
+	public void incrementLandingZoneStepCount(int builderUnit, WsCoordinate coordinate){
+		++landingZoneStepCounts[builderUnit][coordinate.getX()][coordinate.getY()];
+	}
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
