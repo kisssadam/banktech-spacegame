@@ -145,7 +145,7 @@ public class GameController {
 			int[] points = new int[4];
 
 			WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
-			WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates();
+			WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates(landingZone.getShuttleLandingZonePart());
 
 			if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttleExitPos())
 					&& (lastCommonResp.getTurnsLeft() == totalTurns
@@ -228,31 +228,86 @@ public class GameController {
 					}
 				}
 			}
-			List<Integer> minIndices = getMinIndices(points);
+			List<WsCoordinate> bestCoordinates = getMinCoordinates(points, neightborCoordinates);
 
-			int minIndex = minIndices.get(0);
-			System.out.println("A kiválasztás végeredménye: " + neightborCoordinates[minIndex]);
+			WsCoordinate bestCoordinate = bestCoordinates.get(0);
 
-			return neightborCoordinates[minIndex];
+//			LandingZonePart landingZonePart = landingZone.determineLandingZonePart(unitPosition);
+//			for (WsCoordinate coordinate : bestCoordinates) {
+//				switch (landingZonePart) {
+//				case BOTTOM_LEFT:
+//					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					}
+//					break;
+//				case BOTTOM_RIGHT:
+//					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					}
+//					break;
+//				case CENTER:
+//					// TODO ?
+//					break;
+//				case TOP_LEFT:
+//					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					}
+//					break;
+//				case TOP_RIGHT:
+//					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
+//						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
+//							bestCoordinate = coordinate;
+//						}
+//					}
+//					break;
+//				default:
+//					break;
+//				}
+//			}
+			System.out.println("A kiválasztás végeredménye: " + bestCoordinate);
+
+			return bestCoordinate;
 		}
 	}
 
-	public static List<Integer> getMinIndices(int[] points) {
-		List<Integer> minIndices = new ArrayList<>(points.length);
+	public static List<WsCoordinate> getMinCoordinates(int[] points, WsCoordinate[] coordinates) {
+		List<WsCoordinate> mins = new ArrayList<>(points.length);
 
 		int minElem = Integer.MAX_VALUE;
 		for (int i = 0; i < points.length; i++) {
 			if (points[i] < minElem) {
 				minElem = points[i];
 
-				minIndices.clear();
-				minIndices.add(i);
+				mins.clear();
+				mins.add(coordinates[i]);
 			} else if (points[i] == minElem) {
-				minIndices.add(i);
+				mins.add(coordinates[i]);
 			}
 		}
 
-		return minIndices;
+		return mins;
 	}
 
 	private boolean isCoordinateValid(WsCoordinate wsCoordinate) {

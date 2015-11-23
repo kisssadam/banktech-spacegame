@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import hu.unideb.inf.LandingZonePart;
+
 /**
  * <p>
  * Java class for wsCoordinate complex type.
@@ -78,27 +80,127 @@ public class WsCoordinate {
 		this.y = value;
 	}
 
-	public WsCoordinate[] getNeighborCoordinates() {
-		return new WsCoordinate[] {
-				/*
-				 * LEFT NEIGHBOR
-				 */
-				new WsCoordinate(x - 1, y),
+	public WsCoordinate[] getNeighborCoordinates(LandingZonePart shuttleLandingZonePart) {
+		WsCoordinate[] neighbors;
 
-				/*
-				 * RIGHT NEIGHBOR
-				 */
-				new WsCoordinate(x + 1, y),
+		switch (shuttleLandingZonePart) {
+		case BOTTOM_LEFT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
 
-				/*
-				 * UP NEIGHBOR
-				 */
-				new WsCoordinate(x, y + 1),
+					/*
+					 * RIGHT NEIGHBOR
+					 */
 
-				/*
-				 * DOWN NEIGHBOR
-				 */
-				new WsCoordinate(x, y - 1) };
+					new WsCoordinate(x + 1, y),
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y) };
+			break;
+
+		case BOTTOM_RIGHT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1) };
+			break;
+
+		case CENTER:
+		default:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1) };
+			break;
+
+		case TOP_LEFT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y) };
+			break;
+
+		case TOP_RIGHT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1) };
+			break;
+		}
+		return neighbors;
 	}
 
 	public WsCoordinate[] getSecondNeightborCoordinates() {

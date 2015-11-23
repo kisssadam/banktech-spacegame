@@ -23,6 +23,7 @@ public class LandingZone {
 	private ObjectType[][] terrain;
 	private String[][] ownerTeam;
 	private Set<WsCoordinate>[] unitAlreadyVisitedCoordinates;
+	private LandingZonePart shuttleLandingZonePart;
 
 	@SuppressWarnings("unchecked")
 	public LandingZone(StartGameResponse startGameResponse, GetSpaceShuttlePosResponse getSpaceShuttlePosResponse,
@@ -44,6 +45,8 @@ public class LandingZone {
 		for (int i = 0; i < unitAlreadyVisitedCoordinates.length; i++) {
 			unitAlreadyVisitedCoordinates[i] = new HashSet<>();
 		}
+
+		this.shuttleLandingZonePart = determineLandingZonePart(spaceShuttlePos);
 	}
 
 	private final void initTerrainAndOwnerArray() {
@@ -113,7 +116,7 @@ public class LandingZone {
 		this.unitPosition[unit] = wsCoordinate;
 	}
 
-	private LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
+	public LandingZonePart determineLandingZonePart(WsCoordinate coordinate) {
 		WsCoordinate central = determineCentralCoordinates();
 		int centralRadius = determineCentralRadius();
 
@@ -160,6 +163,10 @@ public class LandingZone {
 
 	public WsCoordinate getSize() {
 		return size;
+	}
+
+	public LandingZonePart getShuttleLandingZonePart() {
+		return shuttleLandingZonePart;
 	}
 
 	public ObjectType getTerrainOfCell(WsCoordinate coordinate) {
