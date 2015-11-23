@@ -145,7 +145,8 @@ public class GameController {
 			int[] points = new int[4];
 
 			WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
-			WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates(landingZone.getShuttleLandingZonePart());
+			WsCoordinate[] neightborCoordinates = unitPosition
+					.getNeighborCoordinates(/* landingZone.getShuttleLandingZonePart() */);
 
 			if (landingZone.getUnitPosition(actualBuilderUnit).equals(landingZone.getSpaceShuttleExitPos())
 					&& (lastCommonResp.getTurnsLeft() == totalTurns
@@ -232,60 +233,60 @@ public class GameController {
 
 			WsCoordinate bestCoordinate = bestCoordinates.get(0);
 
-//			LandingZonePart landingZonePart = landingZone.determineLandingZonePart(unitPosition);
-//			for (WsCoordinate coordinate : bestCoordinates) {
-//				switch (landingZonePart) {
-//				case BOTTOM_LEFT:
-//					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					}
-//					break;
-//				case BOTTOM_RIGHT:
-//					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					}
-//					break;
-//				case CENTER:
-//					// TODO ?
-//					break;
-//				case TOP_LEFT:
-//					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					}
-//					break;
-//				case TOP_RIGHT:
-//					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
-//						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
-//							bestCoordinate = coordinate;
-//						}
-//					}
-//					break;
-//				default:
-//					break;
-//				}
-//			}
+			LandingZonePart landingZonePart = landingZone.determineLandingZonePart(unitPosition);
+			for (WsCoordinate coordinate : bestCoordinates) {
+				switch (landingZonePart) {
+				case BOTTOM_LEFT:
+					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					}
+					break;
+				case BOTTOM_RIGHT:
+					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.UP.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					} else if (WsDirection.DOWN.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					}
+					break;
+				case CENTER:
+					// TODO ?
+					break;
+				case TOP_LEFT:
+					if (WsDirection.LEFT.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.RIGHT.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					}
+					break;
+				case TOP_RIGHT:
+					if (WsDirection.RIGHT.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.DOWN.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					} else if (WsDirection.UP.equals(lastDirections[actualBuilderUnit])) {
+						if (WsDirection.LEFT.equals(calculateDirection(unitPosition, coordinate))) {
+							bestCoordinate = coordinate;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
 			System.out.println("A kiválasztás végeredménye: " + bestCoordinate);
 
 			return bestCoordinate;
@@ -411,7 +412,7 @@ public class GameController {
 				landingZone.setTerrain(actualUnitPosition, ObjectType.TUNNEL);
 			}
 			landingZone.setUnitPosition(unit, coordinate);
-			landingZone.setTerrain(actualUnitPosition, ObjectType.BUILDER_UNIT);
+			landingZone.setTerrain(coordinate, ObjectType.BUILDER_UNIT);
 			landingZone.setOwnerTeam(coordinate, TEAM_NAME);
 			landingZone.addVisitedCoordinates(actualBuilderUnit, coordinate);
 
