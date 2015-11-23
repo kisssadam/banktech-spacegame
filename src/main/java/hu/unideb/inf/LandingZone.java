@@ -1,7 +1,9 @@
 package hu.unideb.inf;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import eu.loxon.centralcontrol.GetSpaceShuttleExitPosResponse;
 import eu.loxon.centralcontrol.GetSpaceShuttlePosResponse;
@@ -20,7 +22,9 @@ public class LandingZone {
 	private WsCoordinate[] unitPosition;
 	private ObjectType[][] terrain;
 	private String[][] ownerTeam;
+	private Set<WsCoordinate>[] unitAlreadyVisitedCoordinates;
 
+	@SuppressWarnings("unchecked")
 	public LandingZone(StartGameResponse startGameResponse, GetSpaceShuttlePosResponse getSpaceShuttlePosResponse,
 			GetSpaceShuttleExitPosResponse getSpaceShuttleExitPosResponse) {
 		this.size = startGameResponse.getSize();
@@ -35,6 +39,11 @@ public class LandingZone {
 		}
 
 		initTerrainAndOwnerArray();
+
+		this.unitAlreadyVisitedCoordinates = new Set[4];
+		for (int i = 0; i < unitAlreadyVisitedCoordinates.length; i++) {
+			unitAlreadyVisitedCoordinates[i] = new HashSet<>();
+		}
 	}
 
 	private final void initTerrainAndOwnerArray() {
@@ -61,6 +70,14 @@ public class LandingZone {
 
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
 		this.terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
+	}
+
+	public void addVisitedCoordinates(int builderUnit, WsCoordinate coordinate) {
+		this.unitAlreadyVisitedCoordinates[builderUnit].add(coordinate);
+	}
+
+	public boolean hasBuilderUnitVisitedCoordinate(int builderUnit, WsCoordinate coordinate) {
+		return this.unitAlreadyVisitedCoordinates[builderUnit].contains(coordinate);
 	}
 
 	public boolean isThereAnyBuilderUnitOnCoordinate(WsCoordinate wsCoordinate) {

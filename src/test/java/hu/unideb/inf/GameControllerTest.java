@@ -2,6 +2,10 @@ package hu.unideb.inf;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -62,6 +66,66 @@ public class GameControllerTest {
 
 		WsCoordinate rightCoordinate = GameController.calculateWsCoordinate(wsCoordinate, WsDirection.RIGHT);
 		assertEquals(new WsCoordinate(11, 10), rightCoordinate);
+	}
+
+	@Test
+	public void testGetMinIndices1() {
+		int[] points = new int[] { 1, 1, 2, 3, 3, 3 };
+
+		List<Integer> minIndices = GameController.getMinIndices(points);
+		Collections.sort(minIndices);
+
+		List<Integer> expectedIndices = new ArrayList<>();
+		expectedIndices.add(0);
+		expectedIndices.add(1);
+		Collections.sort(expectedIndices);
+
+		assertEquals(expectedIndices, minIndices);
+	}
+
+	@Test
+	public void testGetMinIndices2() {
+		int[] points = new int[] { 2, 1, 1, 2, 3, 3, 3, 0 };
+
+		List<Integer> minIndices = GameController.getMinIndices(points);
+		Collections.sort(minIndices);
+
+		List<Integer> expectedIndices = new ArrayList<>();
+		expectedIndices.add(points.length - 1);
+		Collections.sort(expectedIndices);
+
+		assertEquals(expectedIndices, minIndices);
+	}
+
+	@Test
+	public void testGetMinIndices3() {
+		int[] points = new int[] { 2, 1, 1, 2, 3, 3, 3 };
+
+		List<Integer> minIndices = GameController.getMinIndices(points);
+		Collections.sort(minIndices);
+
+		List<Integer> expectedIndices = new ArrayList<>();
+		expectedIndices.add(1);
+		expectedIndices.add(2);
+		Collections.sort(expectedIndices);
+
+		assertEquals(expectedIndices, minIndices);
+	}
+
+	@Test
+	public void testGetMinIndices4() {
+		int[] points = new int[] { 2, 2, 2, 2, 1, 1, 2, 3, 3, 3, 1, 3 };
+
+		List<Integer> minIndices = GameController.getMinIndices(points);
+		Collections.sort(minIndices);
+
+		List<Integer> expectedIndices = new ArrayList<>();
+		expectedIndices.add(4);
+		expectedIndices.add(5);
+		expectedIndices.add(points.length - 2);
+		Collections.sort(expectedIndices);
+
+		assertEquals(expectedIndices, minIndices);
 	}
 
 }

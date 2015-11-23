@@ -84,13 +84,16 @@ public class GameController {
 					structureTunnel(actualBuilderUnit, exitDirection);
 				}
 			} else {
-				WsCoordinate bestCoordinate = getBestCoordinate();
-				doNextStep(bestCoordinate);
+				doNextSteps();
 			}
 		} else {
-			WsCoordinate bestCoordinate = getBestCoordinate();
-			doNextStep(bestCoordinate);
+			doNextSteps();
 		}
+	}
+
+	private void doNextSteps() {
+		WsCoordinate bestCoordinate = getBestCoordinate();
+		doNextStep(bestCoordinate);
 	}
 
 	private void doNextStep(WsCoordinate coordinate) {
@@ -143,7 +146,7 @@ public class GameController {
 		int[] points = new int[4];
 
 		WsCoordinate unitPosition = landingZone.getUnitPosition(actualBuilderUnit);
-		WsCoordinate[] neightborCoordinates = unitPosition.getNeightborCoordinates();
+		WsCoordinate[] neightborCoordinates = unitPosition.getNeighborCoordinates();
 
 		for (int i = 0; i < neightborCoordinates.length; i++) {
 			WsCoordinate neighbor = neightborCoordinates[i];
@@ -154,12 +157,16 @@ public class GameController {
 				System.out.println("TUNNEL lett kiválasztva.");
 				String teamOfCell = landingZone.getTeamOfCell(neighbor);
 				if (TEAM_NAME.equals(teamOfCell)) {
-					WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
-							neighbor);
-					if (lastDirections[actualBuilderUnit].opposite() != direction) {
-						points[i] = 2;
-					} else {
+					if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
 						points[i] = 5;
+					} else {
+						WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
+								neighbor);
+						if (lastDirections[actualBuilderUnit].opposite() != direction) {
+							points[i] = 2;
+						} else {
+							points[i] = 5;
+						}
 					}
 				} else {
 					points[i] = 4;
@@ -177,22 +184,37 @@ public class GameController {
 				break;
 
 			default:
-				System.out.println("DEFAULT lett kiválasztva.");
+				System.out.println("DEFAULT lett kiválasztva. ObjectType is: " + objectType);
 				points[i] = Integer.MAX_VALUE;
 				break;
 			}
 		}
 
-		int minIndex = 0;
-		for (int i = 0; i < points.length; i++) {
-			if (points[i] < points[minIndex]) {
-				minIndex = i;
-			}
-		}
+		List<Integer> minIndices = getMinIndices(points);
+
+		int minIndex = minIndices.get(0);
 
 		System.out.println("A kiválasztás végeredménye: " + neightborCoordinates[minIndex]);
 
 		return neightborCoordinates[minIndex];
+	}
+
+	public static List<Integer> getMinIndices(int[] points) {
+		List<Integer> minIndices = new ArrayList<>(points.length);
+
+		int minElem = Integer.MAX_VALUE;
+		for (int i = 0; i < points.length; i++) {
+			if (points[i] < minElem) {
+				minElem = points[i];
+
+				minIndices.clear();
+				minIndices.add(i);
+			} else if (points[i] == minElem) {
+				minIndices.add(i);
+			}
+		}
+
+		return minIndices;
 	}
 
 	private boolean isCoordinateValid(WsCoordinate wsCoordinate) {
@@ -294,6 +316,8 @@ public class GameController {
 			landingZone.setUnitPosition(unit, coordinate);
 			landingZone.setTerrain(landingZone.getUnitPosition(unit), ObjectType.BUILDER_UNIT);
 			landingZone.setOwnerTeam(coordinate, TEAM_NAME);
+			landingZone.addVisitedCoordinates(actualBuilderUnit, coordinate);
+
 			lastDirections[actualBuilderUnit] = wsDirection;
 		}
 

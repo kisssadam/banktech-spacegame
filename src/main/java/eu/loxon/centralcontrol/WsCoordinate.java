@@ -78,7 +78,7 @@ public class WsCoordinate {
 		this.y = value;
 	}
 
-	public WsCoordinate[] getNeightborCoordinates() {
+	public WsCoordinate[] getNeighborCoordinates() {
 		return new WsCoordinate[] {
 				/*
 				 * LEFT NEIGHBOR
