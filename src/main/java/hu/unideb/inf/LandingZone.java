@@ -48,7 +48,7 @@ public class LandingZone {
 		}
 
 		this.shuttleLandingZonePart = determineLandingZonePart(spaceShuttlePos);
-		
+
 		this.landingZoneStepCounts = new int[4][size.getX() + 1][size.getY() + 1];
 		for (int i = 0; i < this.landingZoneStepCounts.length; i++) {
 			for (int j = 0; j < landingZoneStepCounts[0].length; j++) {
@@ -87,8 +87,7 @@ public class LandingZone {
 
 		// A feladat specifikációjából tudjuk, hogy a kijárati cella kristályos szerkezetű.
 		this.terrain[spaceShuttleExitPos.getX()][spaceShuttleExitPos.getY()] = ObjectType.ROCK;
-		
-		
+
 	}
 
 	public void addVisitedCoordinates(int builderUnit, WsCoordinate coordinate) {
@@ -192,23 +191,20 @@ public class LandingZone {
 	public String getTeamOfCell(WsCoordinate coordinate) {
 		return ownerTeam[coordinate.getX()][coordinate.getY()];
 	}
-	public int getLandingZoneStepCount(int builderUnit, WsCoordinate coordinate){
+
+	public int getLandingZoneStepCount(int builderUnit, WsCoordinate coordinate) {
 		return landingZoneStepCounts[builderUnit][coordinate.getX()][coordinate.getY()];
 	}
-	public void incrementLandingZoneStepCount(int builderUnit, WsCoordinate coordinate){
-		++landingZoneStepCounts[builderUnit][coordinate.getX()][coordinate.getY()];
+
+	public void incrementLandingZoneStepCount(int builderUnit, WsCoordinate coordinate) {
+		for (int i = 0; i < 4; i++) {
+			++landingZoneStepCounts[i][coordinate.getX()][coordinate.getY()];
+		}
 	}
+
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
-
-		for (int y = terrain[0].length - 1; y >= 0; y--) {
-			for (int x = 0; x < terrain.length; x++) {
-				stringBuilder.append(terrain[x][y].firstChar());
-				stringBuilder.append(x + 1 < terrain.length ? " " : System.lineSeparator());
-			}
-		}
-		stringBuilder.append(System.lineSeparator());
 
 		stringBuilder.append("Builder units: ").append(units.toString());
 		stringBuilder.append(System.lineSeparator());
@@ -227,6 +223,15 @@ public class LandingZone {
 					+ determineLandingZonePart(unitPosition[i]));
 			stringBuilder.append(System.lineSeparator());
 		}
+		stringBuilder.append(System.lineSeparator());
+
+		for (int y = terrain[0].length - 1; y >= 0; y--) {
+			for (int x = 0; x < terrain.length; x++) {
+				stringBuilder.append(terrain[x][y].firstChar());
+				stringBuilder.append(x + 1 < terrain.length ? " " : System.lineSeparator());
+			}
+		}
+		stringBuilder.append(System.lineSeparator());
 
 		return stringBuilder.toString();
 	}

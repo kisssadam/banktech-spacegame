@@ -46,8 +46,7 @@ public class GameController {
 	private ActionCostResponse actionCostResponse;
 	private int totalTurns;
 	private WsCoordinate[] lastDrillLocation;
-	
-	
+
 	public GameController(CentralControl centralControl) {
 		this.centralControl = centralControl;
 
@@ -163,23 +162,22 @@ public class GameController {
 						System.out.println("TUNNEL lett kiválasztva.");
 						String teamOfCell = landingZone.getTeamOfCell(neighbor);
 						if (TEAM_NAME.equals(teamOfCell)) {
-							if(lastDrillLocation[actualBuilderUnit].equals(neighbor)){
+							if (neighbor.equals(lastDrillLocation[actualBuilderUnit])) {
 								points[i] = 0;
 								lastDrillLocation[actualBuilderUnit] = null;
-							}
-							if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
-								points[i] = 5;
 							} else {
 								points[i] = 1;
 							}
 						} else {
-							points[i] = 4;
+							// TODO robi otlete, hogy ezt vegyuk lentebb
+							points[i] = 3;
 						}
 						break;
 
 					case GRANITE:
 						System.out.println("GRANITE lett kiválasztva.");
-						points[i] = 3;
+						points[i] = 4;
+						// points[i] = 2;
 						break;
 
 					case ROCK:
@@ -203,19 +201,25 @@ public class GameController {
 						System.out.println("TUNNEL lett kiválasztva.");
 						String teamOfCell = landingZone.getTeamOfCell(neighbor);
 						if (TEAM_NAME.equals(teamOfCell)) {
-							if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
-								points[i] = 5;
+							// if (landingZone.hasBuilderUnitVisitedCoordinate(actualBuilderUnit, neighbor)) {
+							// points[i] = 5;
+							// } else {
+							WsDirection direction = calculateDirection(landingZone.getUnitPosition(actualBuilderUnit),
+									neighbor);
+							// if (lastDirections[actualBuilderUnit].opposite() != direction) {
+							if (neighbor.equals(lastDrillLocation[actualBuilderUnit])) {
+								points[i] = 1;
+								lastDrillLocation[actualBuilderUnit] = null;
 							} else {
-								WsDirection direction = calculateDirection(
-										landingZone.getUnitPosition(actualBuilderUnit), neighbor);
-								if (lastDirections[actualBuilderUnit].opposite() != direction) {
-									points[i] = 2;
-								} else {
-									points[i] = 5;
-								}
+//								points[i] = 2;
+								points[i] = 4;
 							}
+							// } else {
+							// points[i] = 5;
+							// }
+							// }
 						} else {
-							points[i] = 4;
+							points[i] = 2;
 						}
 						break;
 
@@ -226,7 +230,7 @@ public class GameController {
 
 					case ROCK:
 						System.out.println("ROCK lett kiválasztva.");
-						points[i] = 1;
+						points[i] = 0;
 						break;
 
 					default:
@@ -238,11 +242,11 @@ public class GameController {
 			}
 			List<WsCoordinate> bestCoordinates = getMinCoordinates(points, neightborCoordinates);
 
-			//LandingZonePart landingZonePart = landingZone.determineLandingZonePart(unitPosition);
+			// LandingZonePart landingZonePart = landingZone.determineLandingZonePart(unitPosition);
 			int min = landingZone.getLandingZoneStepCount(actualBuilderUnit, bestCoordinates.get(0));
 			WsCoordinate bestCoordinate = bestCoordinates.get(0);
 			for (WsCoordinate coordinate : bestCoordinates) {
-				if(landingZone.getLandingZoneStepCount(actualBuilderUnit, coordinate)<min){
+				if (landingZone.getLandingZoneStepCount(actualBuilderUnit, coordinate) < min) {
 					min = landingZone.getLandingZoneStepCount(actualBuilderUnit, coordinate);
 					bestCoordinate = coordinate;
 				}
@@ -525,7 +529,7 @@ public class GameController {
 	private IsMyTurnResponse tryToWaitForMyTurn() throws InterruptedException {
 		IsMyTurnResponse response = null;
 
-		final long requiredTimeToWait = 300L;
+		final long requiredTimeToWait = 150L;
 		long elapsedTimeSinceLastIsMyTurnRequest = System.currentTimeMillis() - this.lastIsMyTurnRequest;
 		if (elapsedTimeSinceLastIsMyTurnRequest < requiredTimeToWait) {
 			Thread.sleep(requiredTimeToWait - elapsedTimeSinceLastIsMyTurnRequest);

@@ -1,1 +1,0 @@
-wsimport -keep -verbose http://javachallenge.loxon.hu:8443/engine/CentralControl?wsdl -Xauthfile authfile

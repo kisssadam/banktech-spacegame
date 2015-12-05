@@ -2,6 +2,8 @@ package eu.loxon.centralcontrol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -80,176 +82,191 @@ public class WsCoordinate {
 		this.y = value;
 	}
 
-//	public WsCoordinate[] getNeighborCoordinates() {
-//		return new WsCoordinate[] {
-//				/*
-//				 * LEFT NEIGHBOR
-//				 */
-//				new WsCoordinate(x - 1, y),
-//
-//				/*
-//				 * UP NEIGHBOR
-//				 */
-//				new WsCoordinate(x, y + 1),
-//
-//				/*
-//				 * RIGHT NEIGHBOR
-//				 */
-//
-//				new WsCoordinate(x + 1, y),
-//				/*
-//				 * DOWN NEIGHBOR
-//				 */
-//				new WsCoordinate(x, y - 1)
-//
-//		};
-//	}
+	// public WsCoordinate[] getNeighborCoordinates() {
+	// return new WsCoordinate[] {
+	// /*
+	// * LEFT NEIGHBOR
+	// */
+	// new WsCoordinate(x - 1, y),
+	//
+	// /*
+	// * UP NEIGHBOR
+	// */
+	// new WsCoordinate(x, y + 1),
+	//
+	// /*
+	// * RIGHT NEIGHBOR
+	// */
+	//
+	// new WsCoordinate(x + 1, y),
+	// /*
+	// * DOWN NEIGHBOR
+	// */
+	// new WsCoordinate(x, y - 1)
+	//
+	// };
+	// }
 
-	 public WsCoordinate[] getNeighborCoordinates(LandingZonePart shuttleLandingZonePart) {
-	 WsCoordinate[] neighbors;
-	
-	 switch (shuttleLandingZonePart) {
-	 case BOTTOM_LEFT:
-	 neighbors = new WsCoordinate[] {
-	 /*
-	 * UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 1),
-	
-	 /*
-	 * RIGHT NEIGHBOR
-	 */
-	
-	 new WsCoordinate(x + 1, y),
-	 /*
-	 * DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 1),
-	
-	 /*
-	 * LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 1, y) };
-	 break;
-	
-	 case BOTTOM_RIGHT:
-	 neighbors = new WsCoordinate[] {
-	 /*
-	 * LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 1, y),
-	
-	 /*
-	 * UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 1),
-	
-	 /*
-	 * RIGHT NEIGHBOR
-	 */
-	 new WsCoordinate(x + 1, y),
-	
-	 /*
-	 * DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 1) };
-	 break;
-	
-	 case CENTER:
-	 default:
-	 neighbors = new WsCoordinate[] {
-	 /*
-	 * LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 1, y),
-	
-	 /*
-	 * UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 1),
-	
-	 /*
-	 * RIGHT NEIGHBOR
-	 */
-	 new WsCoordinate(x + 1, y),
-	
-	 /*
-	 * DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 1) };
-	 break;
-	
-	 case TOP_LEFT:
-	 neighbors = new WsCoordinate[] {
-	 /*
-	 * DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 1),
-	
-	 /*
-	 * RIGHT NEIGHBOR
-	 */
-	 new WsCoordinate(x + 1, y),
-	
-	 /*
-	 * UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 1),
-	
-	 /*
-	 * LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 1, y) };
-	 break;
-	
-	 case TOP_RIGHT:
-	 neighbors = new WsCoordinate[] {
-	 /*
-	 * LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 1, y),
-	
-	 /*
-	 * DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 1),
-	
-	 /*
-	 * RIGHT NEIGHBOR
-	 */
-	 new WsCoordinate(x + 1, y),
-	
-	 /*
-	 * UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 1) };
-	 break;
-	 }
-	 return neighbors;
-	 }
-	
-	 public WsCoordinate[] getSecondNeightborCoordinates() {
-	 return new WsCoordinate[] {
-	 /*
-	 * SECOND LEFT NEIGHBOR
-	 */
-	 new WsCoordinate(x - 2, y),
-	
-	 /*
-	 * SECOND RIGHT NEIGHBOR
-	 */
-	 new WsCoordinate(x + 2, y),
-	
-	 /*
-	 * SECOND UP NEIGHBOR
-	 */
-	 new WsCoordinate(x, y + 2),
-	
-	 /*
-	 * SECOND DOWN NEIGHBOR
-	 */
-	 new WsCoordinate(x, y - 2) };
-	 }
+	public WsCoordinate[] getNeighborCoordinates(LandingZonePart shuttleLandingZonePart) {
+		WsCoordinate[] neighbors;
+
+		switch (shuttleLandingZonePart) {
+		case BOTTOM_LEFT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+
+					new WsCoordinate(x + 1, y),
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y) };
+			break;
+
+		case BOTTOM_RIGHT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1) };
+			break;
+
+		case CENTER:
+		default:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1) };
+			break;
+
+		case TOP_LEFT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1),
+
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y) };
+			break;
+
+		case TOP_RIGHT:
+			neighbors = new WsCoordinate[] {
+					/*
+					 * LEFT NEIGHBOR
+					 */
+					new WsCoordinate(x - 1, y),
+
+					/*
+					 * DOWN NEIGHBOR
+					 */
+					new WsCoordinate(x, y - 1),
+
+					/*
+					 * RIGHT NEIGHBOR
+					 */
+					new WsCoordinate(x + 1, y),
+
+					/*
+					 * UP NEIGHBOR
+					 */
+					new WsCoordinate(x, y + 1) };
+			break;
+		}
+
+		shuffleArray(neighbors);
+
+		return neighbors;
+	}
+
+	private static void shuffleArray(WsCoordinate[] array) {
+		// If running on Java 6 or older, use `new Random()` on RHS here
+		Random rnd = ThreadLocalRandom.current();
+		for (int i = array.length - 1; i > 0; i--) {
+			int index = rnd.nextInt(i + 1);
+			// Simple swap
+			WsCoordinate a = array[index];
+			array[index] = array[i];
+			array[i] = a;
+		}
+	}
+
+	public WsCoordinate[] getSecondNeightborCoordinates() {
+		return new WsCoordinate[] {
+				/*
+				 * SECOND LEFT NEIGHBOR
+				 */
+				new WsCoordinate(x - 2, y),
+
+				/*
+				 * SECOND RIGHT NEIGHBOR
+				 */
+				new WsCoordinate(x + 2, y),
+
+				/*
+				 * SECOND UP NEIGHBOR
+				 */
+				new WsCoordinate(x, y + 2),
+
+				/*
+				 * SECOND DOWN NEIGHBOR
+				 */
+				new WsCoordinate(x, y - 2) };
+	}
 
 	public List<WsCoordinate> getThirdNeightborCoordinates() {
 		List<WsCoordinate> thirdNeighborCoordinates = new ArrayList<>(4);

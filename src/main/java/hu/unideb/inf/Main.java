@@ -12,6 +12,7 @@ public class Main {
 
 	public static void main(String[] args) throws MalformedURLException, InterruptedException {
 		args = getTestArgsArray();
+
 		CentralControl centralControl = getCentralControl(args);
 
 		GameController gameController = new GameController(centralControl);
@@ -19,7 +20,7 @@ public class Main {
 	}
 
 	private static final String[] getTestArgsArray() {
-		String wsdlLocation = "http://javachallenge.loxon.hu:8443/engine/CentralControl?wsdl";
+		String wsdlLocation = "http://192.168.1.2:8443/engine/CentralControl?wsdl";
 		String username = "0x70unideb";
 		String password = "EWGI1853";
 
